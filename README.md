@@ -1,6 +1,6 @@
 # Luuna Beacon
 
-Prompt composition and versioned agent instructions. This is Luuna's maintained MIT-licensed fork of [Canopy](https://github.com/jayminwest/canopy), imported from upstream version **0.2.6**. The Luuna package identity is **@luuna/beacon-cli**. It is maintained in the independent public repository [brodynelly/beacon](https://github.com/brodynelly/beacon). The npm package remains private and unpublished.
+Prompt composition and versioned agent instructions. This is Luuna's maintained MIT-licensed fork of [Canopy](https://github.com/jayminwest/canopy), imported from upstream version **0.2.6**. The Luuna package identity is **@luuna/beacon-cli**. It is maintained in the independent public repository [brodynelly/luuna-beacon](https://github.com/brodynelly/luuna-beacon). The npm package remains private and unpublished.
 
 Run from this directory with Bun 1.4.3:
 
