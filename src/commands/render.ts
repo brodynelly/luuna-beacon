@@ -62,7 +62,7 @@ Options:
 				resolvedFrom: result.resolvedFrom,
 				frontmatter: result.frontmatter,
 			};
-			if (result.mulch !== undefined) envelope.mulch = result.mulch;
+			if (result.atlas !== undefined) envelope.atlas = result.atlas;
 			jsonOut(envelope);
 		} else if (format === "json") {
 			const payload: Record<string, unknown> = {
@@ -72,7 +72,7 @@ Options:
 				resolvedFrom: result.resolvedFrom,
 				frontmatter: result.frontmatter,
 			};
-			if (result.mulch !== undefined) payload.mulch = result.mulch;
+			if (result.atlas !== undefined) payload.atlas = result.atlas;
 			jsonOut(payload);
 		} else {
 			// Markdown format

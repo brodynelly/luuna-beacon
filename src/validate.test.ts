@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import type { Prompt, Schema } from "./types.ts";
-import { validateMulch, validatePrompt } from "./validate.ts";
+import { validateAtlas, validatePrompt } from "./validate.ts";
 
 function makePrompt(overrides: Partial<Prompt> & { id: string; name: string }): Prompt {
 	return {
@@ -160,12 +160,12 @@ describe("validatePrompt", () => {
 		expect(result.warnings.length).toBeGreaterThan(0);
 	});
 
-	it("surfaces mulch shape errors through validatePrompt", () => {
+	it("surfaces atlas shape errors through validatePrompt", () => {
 		const prompt = makePrompt({
 			id: "p-0001",
 			name: "builder",
 			sections: [],
-			mulch: { on_empty: "explode" } as unknown as Prompt["mulch"],
+			atlas: { on_empty: "explode" } as unknown as Prompt["atlas"],
 		});
 
 		const schema = makeSchema({
@@ -176,11 +176,11 @@ describe("validatePrompt", () => {
 
 		const result = validatePrompt(prompt, schema, [prompt]);
 		expect(result.valid).toBe(false);
-		expect(result.errors.some((e) => e.section === "mulch.on_empty")).toBe(true);
+		expect(result.errors.some((e) => e.section === "atlas.on_empty")).toBe(true);
 	});
 });
 
-describe("validateMulch", () => {
+describe("validateAtlas", () => {
 	function p(overrides: Partial<Prompt> & { id?: string; name?: string }): Prompt {
 		return {
 			id: "p-0001",
@@ -194,131 +194,131 @@ describe("validateMulch", () => {
 		};
 	}
 
-	it("returns no errors when mulch and extends_mulch are absent", () => {
-		expect(validateMulch(p({}))).toEqual([]);
+	it("returns no errors when atlas and extends_atlas are absent", () => {
+		expect(validateAtlas(p({}))).toEqual([]);
 	});
 
-	it("returns no errors for a well-formed mulch block", () => {
+	it("returns no errors for a well-formed atlas block", () => {
 		const prompt = p({
-			extends_mulch: true,
-			mulch: {
+			extends_atlas: true,
+			atlas: {
 				prime: { domains: ["warren"], files: ["src/**"] },
 				budget: 50000,
 				on_empty: "skip",
 			},
 		});
-		expect(validateMulch(prompt)).toEqual([]);
+		expect(validateAtlas(prompt)).toEqual([]);
 	});
 
-	it("rejects non-boolean extends_mulch", () => {
-		const prompt = p({ extends_mulch: "yes" as unknown as boolean });
-		const errs = validateMulch(prompt);
+	it("rejects non-boolean extends_atlas", () => {
+		const prompt = p({ extends_atlas: "yes" as unknown as boolean });
+		const errs = validateAtlas(prompt);
 		expect(errs).toHaveLength(1);
-		expect(errs[0]?.section).toBe("extends_mulch");
+		expect(errs[0]?.section).toBe("extends_atlas");
 		expect(errs[0]?.message).toContain("must be a boolean");
 	});
 
-	it("rejects mulch that is not an object", () => {
-		const prompt = p({ mulch: "domains" as unknown as Prompt["mulch"] });
-		const errs = validateMulch(prompt);
-		expect(errs.some((e) => e.section === "mulch" && e.rule === "type")).toBe(true);
+	it("rejects atlas that is not an object", () => {
+		const prompt = p({ atlas: "domains" as unknown as Prompt["atlas"] });
+		const errs = validateAtlas(prompt);
+		expect(errs.some((e) => e.section === "atlas" && e.rule === "type")).toBe(true);
 	});
 
-	it("rejects unknown top-level keys under mulch", () => {
+	it("rejects unknown top-level keys under atlas", () => {
 		const prompt = p({
-			mulch: { foo: 1 } as unknown as Prompt["mulch"],
+			atlas: { foo: 1 } as unknown as Prompt["atlas"],
 		});
-		const errs = validateMulch(prompt);
+		const errs = validateAtlas(prompt);
 		expect(errs.some((e) => e.rule === "unknown-key" && e.message.includes('"foo"'))).toBe(true);
 	});
 
 	it("rejects bad on_empty value", () => {
 		const prompt = p({
-			mulch: { on_empty: "explode" } as unknown as Prompt["mulch"],
+			atlas: { on_empty: "explode" } as unknown as Prompt["atlas"],
 		});
-		const errs = validateMulch(prompt);
+		const errs = validateAtlas(prompt);
 		expect(errs).toHaveLength(1);
-		expect(errs[0]?.section).toBe("mulch.on_empty");
+		expect(errs[0]?.section).toBe("atlas.on_empty");
 		expect(errs[0]?.message).toContain('"skip"');
 	});
 
 	it("rejects non-array domains", () => {
 		const prompt = p({
-			mulch: { prime: { domains: "warren" } } as unknown as Prompt["mulch"],
+			atlas: { prime: { domains: "warren" } } as unknown as Prompt["atlas"],
 		});
-		const errs = validateMulch(prompt);
+		const errs = validateAtlas(prompt);
 		expect(errs).toHaveLength(1);
-		expect(errs[0]?.section).toBe("mulch.prime.domains");
+		expect(errs[0]?.section).toBe("atlas.prime.domains");
 	});
 
 	it("rejects non-string entries in domains array", () => {
 		const prompt = p({
-			mulch: { prime: { domains: ["ok", 42] } } as unknown as Prompt["mulch"],
+			atlas: { prime: { domains: ["ok", 42] } } as unknown as Prompt["atlas"],
 		});
-		const errs = validateMulch(prompt);
-		expect(errs.some((e) => e.section === "mulch.prime.domains")).toBe(true);
+		const errs = validateAtlas(prompt);
+		expect(errs.some((e) => e.section === "atlas.prime.domains")).toBe(true);
 	});
 
 	it("rejects non-array files", () => {
 		const prompt = p({
-			mulch: { prime: { files: { glob: "src/**" } } } as unknown as Prompt["mulch"],
+			atlas: { prime: { files: { glob: "src/**" } } } as unknown as Prompt["atlas"],
 		});
-		const errs = validateMulch(prompt);
+		const errs = validateAtlas(prompt);
 		expect(errs).toHaveLength(1);
-		expect(errs[0]?.section).toBe("mulch.prime.files");
+		expect(errs[0]?.section).toBe("atlas.prime.files");
 	});
 
-	it("rejects unknown keys under mulch.prime", () => {
+	it("rejects unknown keys under atlas.prime", () => {
 		const prompt = p({
-			mulch: { prime: { domains: ["a"], scope: "all" } } as unknown as Prompt["mulch"],
+			atlas: { prime: { domains: ["a"], scope: "all" } } as unknown as Prompt["atlas"],
 		});
-		const errs = validateMulch(prompt);
-		expect(errs.some((e) => e.section === "mulch.prime" && e.rule === "unknown-key")).toBe(true);
+		const errs = validateAtlas(prompt);
+		expect(errs.some((e) => e.section === "atlas.prime" && e.rule === "unknown-key")).toBe(true);
 	});
 
 	it("rejects prime that is not an object", () => {
 		const prompt = p({
-			mulch: { prime: ["a", "b"] } as unknown as Prompt["mulch"],
+			atlas: { prime: ["a", "b"] } as unknown as Prompt["atlas"],
 		});
-		const errs = validateMulch(prompt);
+		const errs = validateAtlas(prompt);
 		expect(errs).toHaveLength(1);
-		expect(errs[0]?.section).toBe("mulch.prime");
+		expect(errs[0]?.section).toBe("atlas.prime");
 	});
 
 	it("rejects negative budget", () => {
 		const prompt = p({
-			mulch: { budget: -1 } as unknown as Prompt["mulch"],
+			atlas: { budget: -1 } as unknown as Prompt["atlas"],
 		});
-		const errs = validateMulch(prompt);
+		const errs = validateAtlas(prompt);
 		expect(errs).toHaveLength(1);
-		expect(errs[0]?.section).toBe("mulch.budget");
+		expect(errs[0]?.section).toBe("atlas.budget");
 	});
 
 	it("rejects non-numeric budget", () => {
 		const prompt = p({
-			mulch: { budget: "lots" } as unknown as Prompt["mulch"],
+			atlas: { budget: "lots" } as unknown as Prompt["atlas"],
 		});
-		const errs = validateMulch(prompt);
+		const errs = validateAtlas(prompt);
 		expect(errs).toHaveLength(1);
-		expect(errs[0]?.section).toBe("mulch.budget");
+		expect(errs[0]?.section).toBe("atlas.budget");
 	});
 
 	it("collects multiple errors in one pass", () => {
 		const prompt = p({
-			extends_mulch: 1 as unknown as boolean,
-			mulch: {
+			extends_atlas: 1 as unknown as boolean,
+			atlas: {
 				prime: { domains: 1 },
 				budget: -5,
 				on_empty: "loud",
 				bogus: true,
-			} as unknown as Prompt["mulch"],
+			} as unknown as Prompt["atlas"],
 		});
-		const errs = validateMulch(prompt);
+		const errs = validateAtlas(prompt);
 		expect(errs.length).toBeGreaterThanOrEqual(4);
 		const sections = errs.map((e) => e.section);
-		expect(sections).toContain("extends_mulch");
-		expect(sections).toContain("mulch.prime.domains");
-		expect(sections).toContain("mulch.budget");
-		expect(sections).toContain("mulch.on_empty");
+		expect(sections).toContain("extends_atlas");
+		expect(sections).toContain("atlas.prime.domains");
+		expect(sections).toContain("atlas.budget");
+		expect(sections).toContain("atlas.on_empty");
 	});
 });

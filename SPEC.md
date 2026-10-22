@@ -15,7 +15,7 @@ Prompt engineering today is unmanaged text files:
 - **No composition** — changing a shared convention means editing every file that contains it
 - **No audit trail for agent runs** — when agent behavior changes, you can't correlate it to a specific prompt version
 
-Overstory manages 7 agent definitions, 2 templates, and generates per-task overlays. Mulch manages structured expertise. Seeds manages issues. But the prompts themselves — the most important input to every agent — are loose files with no tooling.
+Overstory manages 7 agent definitions, 2 templates, and generates per-task overlays. Atlas manages structured expertise. Missions manages issues. But the prompts themselves — the most important input to every agent — are loose files with no tooling.
 
 ## Design Principles
 
@@ -25,13 +25,13 @@ Overstory manages 7 agent definitions, 2 templates, and generates per-task overl
 4. **Git-native.** `merge=union` gitattribute handles parallel branch merges. No custom merge driver needed.
 5. **Prompts are composed, not duplicated.** Sections are the unit of reuse. Inheritance eliminates copy-paste. Change once, propagate everywhere.
 6. **Emit to plain files.** Luuna Beacon is the source of truth; downstream tools consume rendered `.md` files via `luuna-beacon emit`. Adoption is incremental — no tool needs to understand luuna-beacon natively.
-7. **Ecosystem fit.** Same stack as overstory (Bun/TS), same patterns as mulch/seeds (JSONL + locks), same CLI conventions (`--json` flag on everything).
+7. **Ecosystem fit.** Same stack as overstory (Bun/TS), same patterns as atlas/missions (JSONL + locks), same CLI conventions (`--json` flag on everything).
 
 ## On-Disk Format
 
 ```
 .luuna/beacon/
-  config.yaml          # Project config (YAML, matches overstory/mulch/seeds convention)
+  config.yaml          # Project config (YAML, matches overstory/atlas/missions convention)
   prompts.jsonl        # All prompt records with version history
   schemas.jsonl        # Validation schema definitions
   .gitignore           # Ignores lock files
@@ -66,7 +66,7 @@ YAML parsed by a minimal built-in parser that handles nested maps, arrays, flat 
 
 ### prompts.jsonl
 
-One prompt record per line, append-only for version history. The current state of a prompt is the last line with that ID (dedup-on-read, same as seeds). Mutations append a new version rather than overwriting.
+One prompt record per line, append-only for version history. The current state of a prompt is the last line with that ID (dedup-on-read, same as missions). Mutations append a new version rather than overwriting.
 
 ```jsonl
 {"id":"overstory-a1b2","name":"base-agent","version":1,"sections":[{"name":"role","body":"You are an agent in the overstory swarm system.","required":true},{"name":"constraints","body":"- Never push to canonical branch\n- Never spawn sub-workers","required":true}],"tags":["agent","base"],"status":"active","createdAt":"2026-02-22T10:00:00Z","updatedAt":"2026-02-22T10:00:00Z"}
@@ -145,9 +145,9 @@ interface Prompt {
   pinned?: number;           // Pinned version (used by render/emit)
   frontmatter?: Record<string, unknown>;  // Free-form metadata, shallow-merged across chain
 
-  // Mulch (expertise) declaration — see "Mulch Metadata" below
-  mulch?: MulchBlock;        // Declared mulch dependencies for this prompt
-  extends_mulch?: boolean;   // If true, merge with parent's mulch instead of overriding
+  // Atlas (expertise) declaration — see "Atlas Metadata" below
+  atlas?: AtlasBlock;        // Declared atlas dependencies for this prompt
+  extends_atlas?: boolean;   // If true, merge with parent's atlas instead of overriding
 
   status: "draft" | "active" | "archived";
 
@@ -156,9 +156,9 @@ interface Prompt {
   updatedAt: string;         // ISO 8601
 }
 
-interface MulchBlock {
+interface AtlasBlock {
   prime?: {
-    domains?: string[];      // Mulch domains to prime
+    domains?: string[];      // Atlas domains to prime
     files?: string[];        // File globs that scope priming
   };
   budget?: number;           // Non-negative number — consumer-defined units
@@ -198,7 +198,7 @@ interface Schema {
 - Schemas: `schema-{4 random hex chars}` (e.g., `schema-b2c9`)
 - Collision-checked against existing entries on create
 - Falls back to 8 hex chars after 100 collisions (won't happen in practice)
-- Matches seeds/mulch format for ecosystem consistency
+- Matches missions/atlas format for ecosystem consistency
 
 ### Status Lifecycle
 
@@ -261,7 +261,7 @@ Rendered `cautious-review` output contains: role (focal's), workflow (parent's),
 
 Mixins share the same depth limit (5) and circular-reference detection as `extends`. The same prompt can legitimately appear via both `extends` and a mixin (diamond inheritance) — cycles are only detected when the focal prompt itself reappears in a chain.
 
-Mulch metadata inherits through mixins under the same `extends_mulch` flag — see "Override-vs-Merge Semantics" below.
+Atlas metadata inherits through mixins under the same `extends_atlas` flag — see "Override-vs-Merge Semantics" below.
 
 ### Section Removal
 
@@ -281,38 +281,38 @@ Inheritance depth is capped at 5 levels. This is enforced at render time — if 
 
 `luuna-beacon render` tracks visited prompt names during resolution. If a cycle is detected, it errors immediately with the chain (e.g., "Circular inheritance: builder → base-agent → builder").
 
-## Mulch Metadata
+## Atlas Metadata
 
-Roles often need specific [mulch](https://github.com/jayminwest/mulch) expertise to do their job. Luuna Beacon lets a prompt declare those dependencies inline as part of the role definition, so the declaration travels with the role through inheritance and emit. The declaration is metadata only — **luuna-beacon never shells out to `ml`** at render time. Consumers (e.g., warren, overstory) read the resolved `mulch` field from the render envelope and run `ml prime` themselves.
+Roles often need specific Luuna Atlas expertise to do their job. Luuna Beacon lets a prompt declare those dependencies inline as part of the role definition, so the declaration travels with the role through inheritance and emit. The declaration is metadata only — **luuna-beacon never shells out to `luuna-atlas`** at render time. Consumers (e.g., warren, overstory) read the resolved `atlas` field from the render envelope and run `luuna-atlas prime` themselves.
 
 ### Schema
 
 ```jsonl
-{"name":"builder","extends":"base-agent","extends_mulch":true,"mulch":{"prime":{"domains":["beacon","cicd"],"files":["src/**/*.ts"]},"budget":50,"on_empty":"warn"},"sections":[...]}
+{"name":"builder","extends":"base-agent","extends_atlas":true,"atlas":{"prime":{"domains":["beacon","cicd"],"files":["src/**/*.ts"]},"budget":50,"on_empty":"warn"},"sections":[...]}
 ```
 
-- `mulch.prime.domains` — array of domain names (must be strings)
-- `mulch.prime.files` — array of file globs (must be strings)
-- `mulch.budget` — non-negative finite number; consumer-defined units (records, tokens, etc.)
-- `mulch.on_empty` — one of `"skip"`, `"warn"`, `"error"`
-- `extends_mulch` — boolean flag controlling override-vs-merge with the parent
+- `atlas.prime.domains` — array of domain names (must be strings)
+- `atlas.prime.files` — array of file globs (must be strings)
+- `atlas.budget` — non-negative finite number; consumer-defined units (records, tokens, etc.)
+- `atlas.on_empty` — one of `"skip"`, `"warn"`, `"error"`
+- `extends_atlas` — boolean flag controlling override-vs-merge with the parent
 
-All fields are optional. The block is omitted entirely (not `null`, not `{}`) when a prompt declares no mulch dependencies — see "Render Envelope" below.
+All fields are optional. The block is omitted entirely (not `null`, not `{}`) when a prompt declares no atlas dependencies — see "Render Envelope" below.
 
 ### Override-vs-Merge Semantics
 
-By default (`extends_mulch` absent or `false`), a child's `mulch:` block **wholesale overrides** any parent's resolved mulch. This is the opposite of the shallow-merge behaviour of `frontmatter`, and it is intentional: agents should not silently inherit expertise dependencies they didn't ask for.
+By default (`extends_atlas` absent or `false`), a child's `atlas:` block **wholesale overrides** any parent's resolved atlas. This is the opposite of the shallow-merge behaviour of `frontmatter`, and it is intentional: agents should not silently inherit expertise dependencies they didn't ask for.
 
-When `extends_mulch: true`, the resolver merges with the parent pairwise:
+When `extends_atlas: true`, the resolver merges with the parent pairwise:
 
 - `prime.domains` — union of parent + child, deduplicated, parent's order preserved first
 - `prime.files` — same union semantics as `domains`
 - `budget` — last-wins (child overrides parent if defined)
 - `on_empty` — last-wins (child overrides parent if defined)
 
-Multi-level inheritance (grandparent → parent → child) applies the merge pairwise: each level's `extends_mulch` flag controls **its own** merge with its parent. A child can opt in to merging while its parent opts out, or vice versa.
+Multi-level inheritance (grandparent → parent → child) applies the merge pairwise: each level's `extends_atlas` flag controls **its own** merge with its parent. A child can opt in to merging while its parent opts out, or vice versa.
 
-Mixins follow the same rule: when the focal prompt sets `extends_mulch: true`, each mixin's resolved `mulch` is merged left-to-right between the parent chain and the focal prompt. When `extends_mulch` is `false` (default), the focal prompt's own `mulch` block is the only one that survives — mixin mulch contributions are dropped.
+Mixins follow the same rule: when the focal prompt sets `extends_atlas: true`, each mixin's resolved `atlas` is merged left-to-right between the parent chain and the focal prompt. When `extends_atlas` is `false` (default), the focal prompt's own `atlas` block is the only one that survives — mixin atlas contributions are dropped.
 
 ### Render Envelope
 
@@ -327,7 +327,7 @@ Mixins follow the same rule: when the focal prompt sets `extends_mulch: true`, e
   "sections": [...],
   "resolvedFrom": ["base-agent", "builder"],
   "frontmatter": {...},
-  "mulch": {
+  "atlas": {
     "prime": { "domains": ["luuna-beacon", "cicd"], "files": ["src/**/*.ts"] },
     "budget": 50,
     "on_empty": "warn"
@@ -335,32 +335,32 @@ Mixins follow the same rule: when the focal prompt sets `extends_mulch: true`, e
 }
 ```
 
-The `mulch` key is **omitted entirely** (not `null`, not `{}`) when no role in the chain declared a mulch block. Consumers should treat absent and empty as semantically distinct — absent means "no opinion," empty means "this prompt actively declares no mulch."
+The `atlas` key is **omitted entirely** (not `null`, not `{}`) when no role in the chain declared an atlas block. Consumers should treat absent and empty as semantically distinct — absent means "no opinion," empty means "this prompt actively declares no atlas."
 
-`luuna-beacon render --format md` still emits the rendered markdown (sections only) to stdout; the mulch declaration is only surfaced through the JSON envelopes above.
+`luuna-beacon render --format md` still emits the rendered markdown (sections only) to stdout; the atlas declaration is only surfaced through the JSON envelopes above.
 
 ### No Shell-Out Invariant
 
-`luuna-beacon render` does not invoke `ml` or any other external process. The mulch declaration is metadata in the prompt record — luuna-beacon resolves it the same way it resolves sections and frontmatter, with no network or subprocess calls. This keeps luuna-beacon a pure prompt-template engine and decouples its release cadence from mulch.
+`luuna-beacon render` does not invoke `luuna-atlas` or any other external process. The atlas declaration is metadata in the prompt record — luuna-beacon resolves it the same way it resolves sections and frontmatter, with no network or subprocess calls. This keeps luuna-beacon a pure prompt-template engine and decouples its release cadence from atlas.
 
 ### Validation
 
 The schema validator rejects malformed declarations with structural errors (this runs whether or not the prompt has a `schema:` set):
 
-- Unknown keys under `mulch` (allowed: `prime`, `budget`, `on_empty`)
-- Unknown keys under `mulch.prime` (allowed: `domains`, `files`)
-- `mulch.prime.domains` / `mulch.prime.files` not arrays of strings
-- `mulch.budget` not a non-negative finite number
-- `mulch.on_empty` not one of `skip` / `warn` / `error`
-- `extends_mulch` not a boolean
+- Unknown keys under `atlas` (allowed: `prime`, `budget`, `on_empty`)
+- Unknown keys under `atlas.prime` (allowed: `domains`, `files`)
+- `atlas.prime.domains` / `atlas.prime.files` not arrays of strings
+- `atlas.budget` not a non-negative finite number
+- `atlas.on_empty` not one of `skip` / `warn` / `error`
+- `extends_atlas` not a boolean
 
 ### Doctor Check
 
-`luuna-beacon doctor` runs an optional `mulch-domains` check that consults `.luuna/atlas/config.yaml` when present:
+`luuna-beacon doctor` runs an optional `atlas-domains` check that consults `.luuna/atlas/config.yaml` when present:
 
-- If `.luuna/atlas/config.yaml` is missing, the check passes with `"No .luuna/atlas/config.yaml found (skipped)"` — luuna-beacon works fine without mulch
-- If present, every domain referenced by a non-archived prompt's `mulch.prime.domains` is checked against the config's `domains:` list
-- Unknown domains produce a **warning** (not an error) — the message labels which mulch config was consulted, so multi-repo setups (root vs sub-repo `.mulch/`) can disambiguate
+- If `.luuna/atlas/config.yaml` is missing, the check passes with `"No .luuna/atlas/config.yaml found (skipped)"` — luuna-beacon works fine without atlas
+- If present, every domain referenced by a non-archived prompt's `atlas.prime.domains` is checked against the config's `domains:` list
+- Unknown domains produce a **warning** (not an error) — the message labels which atlas config was consulted, so multi-repo setups (root vs sub-repo `.luuna/atlas/`) can disambiguate
 
 This is a typo guard, not a hard gate — luuna-beacon never refuses to render a prompt because of an unknown domain.
 
@@ -374,7 +374,7 @@ Every `luuna-beacon update` appends a new JSONL line with an incremented version
 {"id":"overstory-a1b2","name":"builder","version":3,"sections":[...],...}
 ```
 
-Current state: last line for each ID (highest version). This is the same dedup-on-read pattern as seeds.
+Current state: last line for each ID (highest version). This is the same dedup-on-read pattern as missions.
 
 ### Version Pinning
 
@@ -547,7 +547,7 @@ Render:
 { "success": true, "command": "render", "name": "builder", "version": 3, "sections": [...], "resolvedFrom": ["base-agent", "builder"], "frontmatter": {...} }
 ```
 
-When any prompt in the resolved chain declares a `mulch:` block, the envelope includes a top-level `mulch` field. The field is omitted entirely (not `null`, not `{}`) when no role declared one. See "Mulch Metadata" for the resolved shape.
+When any prompt in the resolved chain declares a `atlas:` block, the envelope includes a top-level `atlas` field. The field is omitted entirely (not `null`, not `{}`) when no role declared one. See "Atlas Metadata" for the resolved shape.
 
 Emit:
 ```json
@@ -567,7 +567,7 @@ Diff:
 
 ## Config Management
 
-`.luuna/beacon/config.yaml` is a small structured surface — `project`, `version`, and the nested `targets` map for named emit targets. Luuna Beacon publishes a JSON Schema describing the canonical shape so external UIs (warren V2's per-tool config editor) can render forms automatically and write back through per-knob CLI commands. The surface mirrors `sd config` and `ml config` so a single warren wire contract works across all three primitive CLIs.
+`.luuna/beacon/config.yaml` is a small structured surface — `project`, `version`, and the nested `targets` map for named emit targets. Luuna Beacon publishes a JSON Schema describing the canonical shape so external UIs (warren V2's per-tool config editor) can render forms automatically and write back through per-knob CLI commands. The surface mirrors `luuna-missions config` and `luuna-atlas config` so a single warren wire contract works across all three primitive CLIs.
 
 ```bash
 # Emit the schema (warren reads this once, renders a form)
@@ -587,7 +587,7 @@ luuna-beacon config set targets.scratch '{dir: .scratch}'
 luuna-beacon config unset targets.scratch
 ```
 
-Writes hold the `config.yaml` advisory lock, write to `.tmp.{random}` and rename atomically over the destination, and validate the full post-write document against the schema before persisting — partial writes that would leave the file inconsistent are rejected and the `.tmp.*` file is cleaned up. The schema's `additionalProperties: false` posture rejects unknown top-level keys; AJV draft 2020-12 is advertised in `$schema`, but compile-time the URI is stripped so AJV runs in default draft-07 mode (matches the seeds implementation).
+Writes hold the `config.yaml` advisory lock, write to `.tmp.{random}` and rename atomically over the destination, and validate the full post-write document against the schema before persisting — partial writes that would leave the file inconsistent are rejected and the `.tmp.*` file is cleaned up. The schema's `additionalProperties: false` posture rejects unknown top-level keys; AJV draft 2020-12 is advertised in `$schema`, but compile-time the URI is stripped so AJV runs in default draft-07 mode (matches the missions implementation).
 
 The schema describes only the **canonical** shape (`project`, `version`, `targets: Record<name, EmitTarget>`). The legacy `emitDir`/`emitDirByTag` converter in `loadConfig` keeps reading old configs, but the first `luuna-beacon config set` on a legacy project normalizes the file to the canonical shape — a one-way migration, documented as expected behavior.
 
@@ -603,7 +603,7 @@ The schema describes only the **canonical** shape (`project`, `version`, `target
 
 ## Concurrency Model
 
-Identical to seeds/mulch — proven in production with multi-agent concurrent access.
+Identical to missions/atlas — proven in production with multi-agent concurrent access.
 
 ### Advisory File Locking
 
@@ -681,7 +681,7 @@ Overstory's overlay generator (`src/agents/overlay.ts`) currently reads raw `.md
 
 **Path 1 (zero coupling):** Use `luuna-beacon emit --all --out-dir agents/` as a build step. Overstory reads `.md` files as before. Luuna Beacon is invisible to overstory.
 
-**Path 2 (native integration):** Overstory wraps luuna-beacon via `Bun.spawn(["luuna-beacon", ...])` with `--json` parsing, same as seeds/mulch:
+**Path 2 (native integration):** Overstory wraps luuna-beacon via `Bun.spawn(["luuna-beacon", ...])` with `--json` parsing, same as missions/atlas:
 
 | Overstory operation | luuna-beacon command |
 |--------------------|------------|
@@ -696,11 +696,11 @@ Path 1 is recommended for initial adoption. Path 2 adds value when you want sess
 
 Agents don't interact with luuna-beacon directly. They receive rendered prompts via their CLAUDE.md overlay and agent definition `.md` files. Luuna Beacon is an authoring tool, not a runtime dependency.
 
-### Mulch Integration
+### Atlas Integration
 
-Mulch expertise records often describe prompt conventions ("agent definitions should include four behavioral sections"). Luuna Beacon schemas can codify these conventions as enforceable rules rather than prose.
+Atlas expertise records often describe prompt conventions ("agent definitions should include four behavioral sections"). Luuna Beacon schemas can codify these conventions as enforceable rules rather than prose.
 
-In addition, prompts can declare which mulch domains and file globs a role depends on via the `mulch:` block (see "Mulch Metadata"). The declaration is metadata only — luuna-beacon emits it through the render envelope and consumers (e.g., warren, overstory) call `ml prime` themselves at run-spawn time. Luuna Beacon never shells out to `ml`.
+In addition, prompts can declare which atlas domains and file globs a role depends on via the `atlas:` block (see "Atlas Metadata"). The declaration is metadata only — luuna-beacon emits it through the render envelope and consumers (e.g., warren, overstory) call `luuna-atlas prime` themselves at run-spawn time. Luuna Beacon never shells out to `luuna-atlas`.
 
 ## Standalone Value (Outside Overstory)
 
@@ -731,12 +731,12 @@ Explicitly out of scope (keep it minimal):
 
 | Concern | Choice | Rationale |
 |---------|--------|-----------|
-| Runtime | Bun | Matches overstory/seeds/mulch, runs TS directly |
+| Runtime | Bun | Matches overstory/missions/atlas, runs TS directly |
 | Language | TypeScript (strict) | Matches ecosystem |
 | Dependencies | `chalk`, `commander`, `ajv` | Minimal — ajv added in 0.2.5 for `luuna-beacon config` schema validation |
 | Config | YAML (minimal built-in parser) | Matches ecosystem convention |
 | Storage | JSONL | Git-native, diffable, mergeable |
-| Locking | Advisory file locks | Proven in mulch/seeds for multi-agent |
+| Locking | Advisory file locks | Proven in atlas/missions for multi-agent |
 | Formatting | Biome (tabs, 100 char width) | Matches ecosystem |
 | Testing | `bun test` (colocated) | Real I/O, no mocks |
 | Distribution | `bun link` locally | No npm publish for now |
@@ -845,7 +845,7 @@ Script updates both files atomically and prints next steps.
 
 ### /release Slash Command
 
-`.claude/commands/release.md` -- identical workflow to overstory/seeds:
+`.claude/commands/release.md` -- identical workflow to overstory/missions:
 
 1. Analyze changes since last release (`git log`, `git diff`)
 2. Determine version bump (major/minor/patch, default: patch)

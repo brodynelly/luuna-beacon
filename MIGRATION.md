@@ -23,3 +23,4 @@ Project data moved from the legacy project-root directory to `.luuna/beacon/`. F
 - The `cn` bin alias was removed; use `luuna-beacon` or `lb`.
 - Onboard markers changed to `luuna-beacon:start/end`; `lb onboard` upgrades existing sections.
 - All legacy names are confined to `src/legacy-layout.ts`.
+- Prompt-record fields `mulch`/`extends_mulch` are now `atlas`/`extends_atlas`, and the `render --json` envelope key follows. Old-key records are normalised on read and rewritten with the new keys only when a new version is appended. The alias logic lives in `src/legacy-layout.ts`.

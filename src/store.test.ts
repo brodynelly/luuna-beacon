@@ -141,17 +141,17 @@ describe("Prompt schema round-trip", () => {
 		updatedAt: "2026-05-10T00:00:00Z",
 	};
 
-	it("round-trips a prompt with mulch block and extends_mulch flag", async () => {
+	it("round-trips a prompt with atlas block and extends_atlas flag", async () => {
 		const path = join(tmpDir, "prompts.jsonl");
 		const prompt: Prompt = {
 			id: "beacon-aaaa",
-			name: "with-mulch",
+			name: "with-atlas",
 			...baseFields,
-			extends_mulch: true,
-			mulch: {
+			extends_atlas: true,
+			atlas: {
 				prime: {
 					domains: ["warren", "ecosystem"],
-					files: ["src/runs/**", ".seeds/**"],
+					files: ["src/runs/**", ".luuna/missions/**"],
 				},
 				budget: 50000,
 				on_empty: "skip",
@@ -164,7 +164,7 @@ describe("Prompt schema round-trip", () => {
 		expect(result[0]).toEqual(prompt);
 	});
 
-	it("omits mulch and extends_mulch from JSONL when undefined", async () => {
+	it("omits atlas and extends_atlas from JSONL when undefined", async () => {
 		const path = join(tmpDir, "prompts.jsonl");
 		const prompt: Prompt = {
 			id: "beacon-bbbb",
@@ -174,12 +174,12 @@ describe("Prompt schema round-trip", () => {
 		await writeJsonl(path, [prompt]);
 
 		const text = await Bun.file(path).text();
-		expect(text).not.toContain('"mulch"');
-		expect(text).not.toContain("extends_mulch");
+		expect(text).not.toContain('"atlas"');
+		expect(text).not.toContain("extends_atlas");
 
 		const result = await readJsonl<Prompt>(path);
-		expect(result[0]?.mulch).toBeUndefined();
-		expect(result[0]?.extends_mulch).toBeUndefined();
+		expect(result[0]?.atlas).toBeUndefined();
+		expect(result[0]?.extends_atlas).toBeUndefined();
 	});
 
 	it("reads legacy records without the new fields", async () => {
@@ -189,8 +189,8 @@ describe("Prompt schema round-trip", () => {
 			`{"id":"beacon-cccc","name":"legacy","version":1,"sections":[],"status":"active","createdAt":"2026-01-01T00:00:00Z","updatedAt":"2026-01-01T00:00:00Z"}\n`,
 		);
 		const result = await readJsonl<Prompt>(path);
-		expect(result[0]?.mulch).toBeUndefined();
-		expect(result[0]?.extends_mulch).toBeUndefined();
+		expect(result[0]?.atlas).toBeUndefined();
+		expect(result[0]?.extends_atlas).toBeUndefined();
 	});
 });
 

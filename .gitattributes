@@ -1,5 +1,2 @@
-.seeds/issues.jsonl merge=union
-.seeds/templates.jsonl merge=union
-.mulch/expertise/*.jsonl merge=union
 .luuna/beacon/prompts.jsonl merge=union
 .luuna/beacon/schemas.jsonl merge=union

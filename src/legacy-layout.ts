@@ -62,3 +62,26 @@ export function upgradeLegacyMarkers(content: string): string {
 	for (const [from, to] of LEGACY_MARKER_PAIRS) out = out.split(from).join(to);
 	return out;
 }
+
+const LEGACY_KEY_ALIASES: ReadonlyArray<readonly [string, string]> = [
+	["mulch", "atlas"],
+	["extends_mulch", "extends_atlas"],
+];
+
+/**
+ * Normalise prompt records written with the pre-Luuna field names to the
+ * current ones. When both spellings are present the current key wins.
+ * Returns the same object when nothing needs to change.
+ */
+export function normalizeLegacyRecord<T>(record: T): T {
+	if (typeof record !== "object" || record === null || Array.isArray(record)) return record;
+	const rec = record as Record<string, unknown>;
+	if (!LEGACY_KEY_ALIASES.some(([oldKey]) => oldKey in rec)) return record;
+	const out: Record<string, unknown> = { ...rec };
+	for (const [oldKey, newKey] of LEGACY_KEY_ALIASES) {
+		if (!(oldKey in out)) continue;
+		if (out[newKey] === undefined) out[newKey] = out[oldKey];
+		delete out[oldKey];
+	}
+	return out as T;
+}

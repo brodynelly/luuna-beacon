@@ -9,7 +9,7 @@ import { resolvePrompt } from "../render.ts";
 import { dedupById, dedupByIdLast, readJsonl } from "../store.ts";
 import type { Prompt, Schema } from "../types.ts";
 import { LOCK_STALE_MS } from "../types.ts";
-import { validateMulch, validatePrompt } from "../validate.ts";
+import { validateAtlas, validatePrompt } from "../validate.ts";
 import { parseYaml } from "../yaml.ts";
 import { resolveEmitDir } from "./emit.ts";
 
@@ -234,12 +234,12 @@ async function checkSchemaValidation(dataDir: string): Promise<DoctorCheck> {
 	};
 }
 
-// 4b. mulch-shape — structural validation of mulch block + extends_mulch flag
-async function checkMulchShape(dataDir: string): Promise<DoctorCheck> {
+// 4b. atlas-shape — structural validation of atlas block + extends_atlas flag
+async function checkAtlasShape(dataDir: string): Promise<DoctorCheck> {
 	const promptsPath = join(dataDir, "prompts.jsonl");
 	if (!existsSync(promptsPath)) {
 		return {
-			name: "mulch-shape",
+			name: "atlas-shape",
 			status: "pass",
 			message: "No prompts to check",
 			details: [],
@@ -254,11 +254,11 @@ async function checkMulchShape(dataDir: string): Promise<DoctorCheck> {
 	let checked = 0;
 	for (const prompt of prompts) {
 		if (prompt.status === "archived") continue;
-		const hasMulch = (prompt as { mulch?: unknown }).mulch !== undefined;
-		const hasExtendsMulch = (prompt as { extends_mulch?: unknown }).extends_mulch !== undefined;
-		if (!hasMulch && !hasExtendsMulch) continue;
+		const hasAtlas = (prompt as { atlas?: unknown }).atlas !== undefined;
+		const hasExtendsAtlas = (prompt as { extends_atlas?: unknown }).extends_atlas !== undefined;
+		if (!hasAtlas && !hasExtendsAtlas) continue;
 		checked++;
-		const errs = validateMulch(prompt);
+		const errs = validateAtlas(prompt);
 		for (const err of errs) {
 			details.push(`${prompt.name}: [${err.section}] ${err.message}`);
 		}
@@ -266,45 +266,45 @@ async function checkMulchShape(dataDir: string): Promise<DoctorCheck> {
 
 	if (details.length > 0) {
 		return {
-			name: "mulch-shape",
+			name: "atlas-shape",
 			status: "fail",
-			message: `${String(details.length)} malformed mulch declaration(s)`,
+			message: `${String(details.length)} malformed atlas declaration(s)`,
 			details,
 			fixable: false,
 		};
 	}
 	if (checked === 0) {
 		return {
-			name: "mulch-shape",
+			name: "atlas-shape",
 			status: "pass",
-			message: "No mulch declarations to check",
+			message: "No atlas declarations to check",
 			details: [],
 			fixable: false,
 		};
 	}
 	return {
-		name: "mulch-shape",
+		name: "atlas-shape",
 		status: "pass",
-		message: `${String(checked)} mulch declaration(s) well-formed`,
+		message: `${String(checked)} atlas declaration(s) well-formed`,
 		details: [],
 		fixable: false,
 	};
 }
 
-// 4c. mulch-domains — optional check: validate referenced domain names against
+// 4c. atlas-domains — optional check: validate referenced domain names against
 // .luuna/atlas/config.yaml when present. Warns (does not fail) on unknowns and
-// degrades to a pass/no-op when mulch is absent. The result message labels
-// which mulch config was consulted to disambiguate multi-repo setups.
-async function checkMulchDomains(dataDir: string): Promise<DoctorCheck> {
+// degrades to a pass/no-op when atlas is absent. The result message labels
+// which atlas config was consulted to disambiguate multi-repo setups.
+async function checkAtlasDomains(dataDir: string): Promise<DoctorCheck> {
 	const cwd = resolve(dataDir, "..", "..");
-	const mulchConfigRel = ".luuna/atlas/config.yaml";
-	const mulchConfigPath = join(cwd, mulchConfigRel);
+	const atlasConfigRel = ".luuna/atlas/config.yaml";
+	const atlasConfigPath = join(cwd, atlasConfigRel);
 
-	if (!existsSync(mulchConfigPath)) {
+	if (!existsSync(atlasConfigPath)) {
 		return {
-			name: "mulch-domains",
+			name: "atlas-domains",
 			status: "pass",
-			message: `No ${mulchConfigRel} found (skipped)`,
+			message: `No ${atlasConfigRel} found (skipped)`,
 			details: [],
 			fixable: false,
 		};
@@ -312,13 +312,13 @@ async function checkMulchDomains(dataDir: string): Promise<DoctorCheck> {
 
 	let validDomains: Set<string>;
 	try {
-		const parsed = parseYaml(readFileSync(mulchConfigPath, "utf8"));
+		const parsed = parseYaml(readFileSync(atlasConfigPath, "utf8"));
 		const domainsField = parsed.domains;
 		if (!Array.isArray(domainsField)) {
 			return {
-				name: "mulch-domains",
+				name: "atlas-domains",
 				status: "warn",
-				message: `Could not read 'domains' from ${mulchConfigRel}`,
+				message: `Could not read 'domains' from ${atlasConfigRel}`,
 				details: [],
 				fixable: false,
 			};
@@ -326,9 +326,9 @@ async function checkMulchDomains(dataDir: string): Promise<DoctorCheck> {
 		validDomains = new Set(domainsField);
 	} catch {
 		return {
-			name: "mulch-domains",
+			name: "atlas-domains",
 			status: "warn",
-			message: `Could not parse ${mulchConfigRel}`,
+			message: `Could not parse ${atlasConfigRel}`,
 			details: [],
 			fixable: false,
 		};
@@ -337,9 +337,9 @@ async function checkMulchDomains(dataDir: string): Promise<DoctorCheck> {
 	const promptsPath = join(dataDir, "prompts.jsonl");
 	if (!existsSync(promptsPath)) {
 		return {
-			name: "mulch-domains",
+			name: "atlas-domains",
 			status: "pass",
-			message: `No prompts to check (consulted ${mulchConfigRel})`,
+			message: `No prompts to check (consulted ${atlasConfigRel})`,
 			details: [],
 			fixable: false,
 		};
@@ -352,40 +352,40 @@ async function checkMulchDomains(dataDir: string): Promise<DoctorCheck> {
 
 	for (const prompt of prompts) {
 		if (prompt.status === "archived") continue;
-		const mulch = (prompt as { mulch?: { prime?: { domains?: unknown } } }).mulch;
-		const domains = mulch?.prime?.domains;
+		const atlas = (prompt as { atlas?: { prime?: { domains?: unknown } } }).atlas;
+		const domains = atlas?.prime?.domains;
 		if (!Array.isArray(domains)) continue;
 		checked++;
 		for (const d of domains) {
 			if (typeof d !== "string") continue;
 			if (!validDomains.has(d)) {
-				details.push(`${prompt.name}: domain "${d}" not declared in ${mulchConfigRel}`);
+				details.push(`${prompt.name}: domain "${d}" not declared in ${atlasConfigRel}`);
 			}
 		}
 	}
 
 	if (details.length > 0) {
 		return {
-			name: "mulch-domains",
+			name: "atlas-domains",
 			status: "warn",
-			message: `${String(details.length)} unknown domain reference(s) — consulted ${mulchConfigRel}`,
+			message: `${String(details.length)} unknown domain reference(s) — consulted ${atlasConfigRel}`,
 			details,
 			fixable: false,
 		};
 	}
 	if (checked === 0) {
 		return {
-			name: "mulch-domains",
+			name: "atlas-domains",
 			status: "pass",
-			message: `No mulch domain declarations to check (consulted ${mulchConfigRel})`,
+			message: `No atlas domain declarations to check (consulted ${atlasConfigRel})`,
 			details: [],
 			fixable: false,
 		};
 	}
 	return {
-		name: "mulch-domains",
+		name: "atlas-domains",
 		status: "pass",
-		message: `${String(checked)} prompt(s) reference known domains (consulted ${mulchConfigRel})`,
+		message: `${String(checked)} prompt(s) reference known domains (consulted ${atlasConfigRel})`,
 		details: [],
 		fixable: false,
 	};
@@ -688,11 +688,11 @@ export async function run(fix: boolean, verbose: boolean, json: boolean): Promis
 	// 4. schema validation
 	checks.push(await checkSchemaValidation(dataDir));
 
-	// 4b. mulch shape validation
-	checks.push(await checkMulchShape(dataDir));
+	// 4b. atlas shape validation
+	checks.push(await checkAtlasShape(dataDir));
 
-	// 4c. mulch domain references (optional, warn-only)
-	checks.push(await checkMulchDomains(dataDir));
+	// 4c. atlas domain references (optional, warn-only)
+	checks.push(await checkAtlasDomains(dataDir));
 
 	// 5. inheritance
 	checks.push(await checkInheritance(dataDir));
@@ -720,8 +720,8 @@ export async function run(fix: boolean, verbose: boolean, json: boolean): Promis
 				reChecks.push(checkPromptsIntegrity(dataDir));
 				reChecks.push(checkSchemasIntegrity(dataDir));
 				reChecks.push(await checkSchemaValidation(dataDir));
-				reChecks.push(await checkMulchShape(dataDir));
-				reChecks.push(await checkMulchDomains(dataDir));
+				reChecks.push(await checkAtlasShape(dataDir));
+				reChecks.push(await checkAtlasDomains(dataDir));
 				reChecks.push(await checkInheritance(dataDir));
 				reChecks.push(await checkEmitStaleness(dataDir));
 				reChecks.push(checkStaleLocks(dataDir));

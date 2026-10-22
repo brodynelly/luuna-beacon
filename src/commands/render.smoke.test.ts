@@ -11,7 +11,7 @@ import type { Prompt } from "../types.ts";
 // invariant (acceptance criterion 7 of pl-003f).
 
 const tmpDir = join(import.meta.dir, "../../.test-tmp-render-smoke");
-const cnEntry = join(import.meta.dir, "../index.ts");
+const cliEntry = join(import.meta.dir, "../index.ts");
 
 function makePrompt(overrides: Partial<Prompt> & { id: string; name: string }): Prompt {
 	return {
@@ -28,13 +28,13 @@ async function seed(prompt: Prompt): Promise<void> {
 	await appendJsonl(join(tmpDir, ".luuna", "beacon", "prompts.jsonl"), prompt);
 }
 
-interface CnResult {
+interface CliResult {
 	stdout: string;
 	stderr: string;
 	exitCode: number;
 }
 
-async function runCn(args: string[], pathPrefix?: string): Promise<CnResult> {
+async function runCli(args: string[], pathPrefix?: string): Promise<CliResult> {
 	const env: Record<string, string> = {};
 	for (const [k, v] of Object.entries(process.env)) {
 		if (typeof v === "string") env[k] = v;
@@ -42,7 +42,7 @@ async function runCn(args: string[], pathPrefix?: string): Promise<CnResult> {
 	if (pathPrefix) {
 		env.PATH = `${pathPrefix}:${env.PATH ?? ""}`;
 	}
-	const proc = Bun.spawn(["bun", cnEntry, ...args], {
+	const proc = Bun.spawn(["bun", cliEntry, ...args], {
 		cwd: tmpDir,
 		env,
 		stdout: "pipe",
@@ -66,13 +66,13 @@ afterEach(() => {
 });
 
 describe("warren-style smoke: luuna-beacon render --json envelope", () => {
-	it("returns a stable envelope with mulch field when role declares mulch", async () => {
+	it("returns a stable envelope with atlas field when role declares atlas", async () => {
 		await seed(
 			makePrompt({
 				id: "p-0001",
 				name: "warren-builder",
 				sections: [{ name: "role", body: "Warren builder agent." }],
-				mulch: {
+				atlas: {
 					prime: { domains: ["beacon", "warren"], files: ["src/**"] },
 					budget: 8000,
 					on_empty: "warn",
@@ -80,7 +80,7 @@ describe("warren-style smoke: luuna-beacon render --json envelope", () => {
 			}),
 		);
 
-		const { stdout, exitCode } = await runCn(["render", "warren-builder", "--json"]);
+		const { stdout, exitCode } = await runCli(["render", "warren-builder", "--json"]);
 		expect(exitCode).toBe(0);
 
 		const envelope = JSON.parse(stdout.trim());
@@ -91,22 +91,22 @@ describe("warren-style smoke: luuna-beacon render --json envelope", () => {
 		expect(envelope.sections).toEqual([{ name: "role", body: "Warren builder agent." }]);
 		expect(envelope.resolvedFrom).toEqual(["warren-builder"]);
 		expect(envelope.frontmatter).toEqual({});
-		expect(envelope.mulch).toEqual({
+		expect(envelope.atlas).toEqual({
 			prime: { domains: ["beacon", "warren"], files: ["src/**"] },
 			budget: 8000,
 			on_empty: "warn",
 		});
 
-		// Warren's downstream consumption: build an `ml prime` invocation from
-		// the resolved mulch declaration. This asserts the field shape is what
+		// Warren's downstream consumption: build an `luuna-atlas prime` invocation from
+		// the resolved atlas declaration. This asserts the field shape is what
 		// warren actually needs.
-		const domains = envelope.mulch.prime.domains as string[];
-		const files = envelope.mulch.prime.files as string[];
-		const primeArgs = ["ml", "prime", ...domains, "--files", ...files];
-		expect(primeArgs).toEqual(["ml", "prime", "beacon", "warren", "--files", "src/**"]);
+		const domains = envelope.atlas.prime.domains as string[];
+		const files = envelope.atlas.prime.files as string[];
+		const primeArgs = ["luuna-atlas", "prime", ...domains, "--files", ...files];
+		expect(primeArgs).toEqual(["luuna-atlas", "prime", "beacon", "warren", "--files", "src/**"]);
 	});
 
-	it("omits mulch entirely when no role in chain declares one", async () => {
+	it("omits atlas entirely when no role in chain declares one", async () => {
 		await seed(
 			makePrompt({
 				id: "p-0001",
@@ -115,21 +115,21 @@ describe("warren-style smoke: luuna-beacon render --json envelope", () => {
 			}),
 		);
 
-		const { stdout, exitCode } = await runCn(["render", "plain-role", "--json"]);
+		const { stdout, exitCode } = await runCli(["render", "plain-role", "--json"]);
 		expect(exitCode).toBe(0);
 
 		const envelope = JSON.parse(stdout.trim());
 		expect(envelope.success).toBe(true);
-		expect("mulch" in envelope).toBe(false);
+		expect("atlas" in envelope).toBe(false);
 	});
 
-	it("merges mulch across multi-level chain when extends_mulch=true at each layer", async () => {
+	it("merges atlas across multi-level chain when extends_atlas=true at each layer", async () => {
 		await seed(
 			makePrompt({
 				id: "p-0001",
 				name: "grand",
 				sections: [{ name: "role", body: "Grand role." }],
-				mulch: { prime: { domains: ["beacon"] }, budget: 1000, on_empty: "error" },
+				atlas: { prime: { domains: ["beacon"] }, budget: 1000, on_empty: "error" },
 			}),
 		);
 		await seed(
@@ -137,9 +137,9 @@ describe("warren-style smoke: luuna-beacon render --json envelope", () => {
 				id: "p-0002",
 				name: "parent",
 				extends: "grand",
-				extends_mulch: true,
+				extends_atlas: true,
 				sections: [],
-				mulch: { prime: { domains: ["warren"] }, budget: 2000 },
+				atlas: { prime: { domains: ["warren"] }, budget: 2000 },
 			}),
 		);
 		await seed(
@@ -147,31 +147,31 @@ describe("warren-style smoke: luuna-beacon render --json envelope", () => {
 				id: "p-0003",
 				name: "child",
 				extends: "parent",
-				extends_mulch: true,
+				extends_atlas: true,
 				sections: [],
-				mulch: { prime: { files: ["src/**"] }, on_empty: "skip" },
+				atlas: { prime: { files: ["src/**"] }, on_empty: "skip" },
 			}),
 		);
 
-		const { stdout, exitCode } = await runCn(["render", "child", "--json"]);
+		const { stdout, exitCode } = await runCli(["render", "child", "--json"]);
 		expect(exitCode).toBe(0);
 
 		const envelope = JSON.parse(stdout.trim());
 		expect(envelope.resolvedFrom).toEqual(["grand", "parent", "child"]);
-		expect(envelope.mulch).toEqual({
+		expect(envelope.atlas).toEqual({
 			prime: { domains: ["beacon", "warren"], files: ["src/**"] },
 			budget: 2000,
 			on_empty: "skip",
 		});
 	});
 
-	it("child wholesale overrides parent mulch when extends_mulch is unset", async () => {
+	it("child wholesale overrides parent atlas when extends_atlas is unset", async () => {
 		await seed(
 			makePrompt({
 				id: "p-0001",
 				name: "base",
 				sections: [{ name: "role", body: "Base." }],
-				mulch: { prime: { domains: ["a", "b"] }, budget: 1000 },
+				atlas: { prime: { domains: ["a", "b"] }, budget: 1000 },
 			}),
 		);
 		await seed(
@@ -180,44 +180,44 @@ describe("warren-style smoke: luuna-beacon render --json envelope", () => {
 				name: "child",
 				extends: "base",
 				sections: [],
-				mulch: { prime: { domains: ["c"] } },
+				atlas: { prime: { domains: ["c"] } },
 			}),
 		);
 
-		const { stdout, exitCode } = await runCn(["render", "child", "--json"]);
+		const { stdout, exitCode } = await runCli(["render", "child", "--json"]);
 		expect(exitCode).toBe(0);
 
 		const envelope = JSON.parse(stdout.trim());
-		expect(envelope.mulch).toEqual({ prime: { domains: ["c"] } });
+		expect(envelope.atlas).toEqual({ prime: { domains: ["c"] } });
 	});
 
-	it("does not shell out to `ml` (PATH tracer asserts no invocation)", async () => {
+	it("does not shell out to `luuna-atlas` (PATH tracer asserts no invocation)", async () => {
 		await seed(
 			makePrompt({
 				id: "p-0001",
 				name: "warren-builder",
 				sections: [{ name: "role", body: "Warren builder." }],
-				mulch: { prime: { domains: ["beacon"] }, budget: 5000, on_empty: "warn" },
+				atlas: { prime: { domains: ["beacon"] }, budget: 5000, on_empty: "warn" },
 			}),
 		);
 
-		// Plant an `ml` shim earlier in PATH that records every invocation
-		// to a marker file. If `luuna-beacon render` were to shell out to mulch, the
+		// Plant an `luuna-atlas` shim earlier in PATH that records every invocation
+		// to a marker file. If `luuna-beacon render` were to shell out to atlas, the
 		// marker would appear.
 		const traceDir = join(tmpDir, ".trace");
 		mkdirSync(traceDir, { recursive: true });
-		const marker = join(traceDir, "ml-was-called");
-		const tracer = join(traceDir, "ml");
+		const marker = join(traceDir, "atlas-was-called");
+		const tracer = join(traceDir, "luuna-atlas");
 		writeFileSync(tracer, `#!/bin/sh\necho "$@" >> ${JSON.stringify(marker)}\nexit 0\n`);
 		Bun.spawnSync(["chmod", "+x", tracer]);
 
-		const { stdout, exitCode } = await runCn(["render", "warren-builder", "--json"], traceDir);
+		const { stdout, exitCode } = await runCli(["render", "warren-builder", "--json"], traceDir);
 		expect(exitCode).toBe(0);
 		expect(existsSync(marker)).toBe(false);
 
-		// The render still succeeds and surfaces the resolved mulch unchanged.
+		// The render still succeeds and surfaces the resolved atlas unchanged.
 		const envelope = JSON.parse(stdout.trim());
-		expect(envelope.mulch).toEqual({
+		expect(envelope.atlas).toEqual({
 			prime: { domains: ["beacon"] },
 			budget: 5000,
 			on_empty: "warn",

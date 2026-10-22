@@ -111,7 +111,7 @@ The tool handles the full prompt lifecycle: create, compose via inheritance, ver
 
 ### Infrastructure Notes
 
-**Concurrent safety**: Advisory file locks (`.luuna/beacon/*.jsonl.lock`) with 30-second stale detection, 5-second timeout, and POSIX atomic writes (tmp+rename). Same pattern proven in production across seeds and mulch.
+**Concurrent safety**: Advisory file locks (`.luuna/beacon/*.jsonl.lock`) with 30-second stale detection, 5-second timeout, and POSIX atomic writes (tmp+rename). Same pattern proven in production across missions and atlas.
 
 **JSONL growth**: Append-only by design. Version history is the append log; no cleanup mechanism exists. ~27 prompt records after 6 weeks of development — growth rate is manageable.
 

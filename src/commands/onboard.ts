@@ -28,7 +28,7 @@ This injects prompt workflow context: commands, conventions, and common workflow
 
 **Do not manually edit emitted files.** Use \`lb update\` to modify prompts, then \`lb emit\` to regenerate.
 
-**Mulch metadata:** Prompts can declare expertise dependencies via \`mulch.prime.domains\`, \`mulch.prime.files\`, \`mulch.budget\`, \`mulch.on_empty\`, plus a top-level \`extends_mulch\` flag (override-by-default; merge with parent when \`true\`). Luuna Beacon never shells out to \`ml\` — \`lb render --json\` surfaces the resolved declaration in a top-level \`mulch\` field for consumers to act on. See SPEC.md "Mulch Metadata".`;
+**Atlas metadata:** Prompts can declare expertise dependencies via \`atlas.prime.domains\`, \`atlas.prime.files\`, \`atlas.budget\`, \`atlas.on_empty\`, plus a top-level \`extends_atlas\` flag (override-by-default; merge with parent when \`true\`). Luuna Beacon never shells out to \`luuna-atlas\` — \`lb render --json\` surfaces the resolved declaration in a top-level \`atlas\` field for consumers to act on. See SPEC.md "Atlas Metadata".`;
 }
 
 function findTargetFile(projectRoot: string): string | null {

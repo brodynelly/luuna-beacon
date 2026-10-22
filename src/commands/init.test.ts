@@ -94,7 +94,7 @@ describe("luuna-beacon init", () => {
 		process.chdir(tmpDir);
 
 		try {
-			// Simulate seeds or mulch having already added merge=union for their own files
+			// Simulate missions or atlas having already added merge=union for their own files
 			await Bun.write(
 				join(tmpDir, ".gitattributes"),
 				".luuna/missions/issues.jsonl merge=union\n.luuna/atlas/records.jsonl merge=union\n",

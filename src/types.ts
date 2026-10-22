@@ -4,17 +4,17 @@ export interface Section {
 	required?: boolean;
 }
 
-export type MulchOnEmpty = "skip" | "warn" | "error";
+export type AtlasOnEmpty = "skip" | "warn" | "error";
 
-export interface MulchPrime {
+export interface AtlasPrime {
 	domains?: string[];
 	files?: string[];
 }
 
-export interface MulchBlock {
-	prime?: MulchPrime;
+export interface AtlasBlock {
+	prime?: AtlasPrime;
 	budget?: number;
-	on_empty?: MulchOnEmpty;
+	on_empty?: AtlasOnEmpty;
 }
 
 export interface Prompt {
@@ -31,8 +31,8 @@ export interface Prompt {
 	emitDir?: string;
 	pinned?: number;
 	frontmatter?: Record<string, unknown>;
-	mulch?: MulchBlock;
-	extends_mulch?: boolean;
+	atlas?: AtlasBlock;
+	extends_atlas?: boolean;
 	status: "draft" | "active" | "archived";
 	createdAt: string;
 	updatedAt: string;

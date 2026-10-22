@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { closeSync, constants, openSync, renameSync, statSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
+import { normalizeLegacyRecord } from "./legacy-layout.ts";
 import { LOCK_RETRY_MS, LOCK_STALE_MS, LOCK_TIMEOUT_MS } from "./types.ts";
 
 function lockPath(filePath: string): string {
@@ -57,7 +58,7 @@ export async function readJsonl<T>(filePath: string): Promise<T[]> {
 			const trimmed = line.trim();
 			if (!trimmed) continue;
 			try {
-				records.push(JSON.parse(trimmed) as T);
+				records.push(normalizeLegacyRecord(JSON.parse(trimmed) as T));
 			} catch {
 				// Skip malformed lines
 			}
