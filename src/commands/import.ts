@@ -7,6 +7,7 @@ import { c, errorOut, fmt, humanOut, jsonOut } from "../output.ts";
 import { acquireLock, appendJsonl, dedupById, readJsonl, releaseLock } from "../store.ts";
 import type { Prompt, Section } from "../types.ts";
 import { ExitError } from "../types.ts";
+import { promptsFile } from "../paths.ts";
 
 function splitMarkdown(content: string): Section[] {
 	const sections: Section[] = [];
@@ -41,10 +42,10 @@ function splitMarkdown(content: string): Section[] {
 
 export default async function importCmd(args: string[], json: boolean): Promise<void> {
 	const cwd = process.cwd();
-	const promptsPath = join(cwd, ".canopy", "prompts.jsonl");
+	const promptsPath = promptsFile(cwd);
 
 	if (args.includes("--help") || args.includes("-h")) {
-		humanOut(`Usage: cn import <path> --name <name> [options]
+		humanOut(`Usage: luuna-beacon import <path> --name <name> [options]
 
 Options:
   --name <name>    Prompt name (required)
@@ -59,7 +60,7 @@ Options:
 		if (json) {
 			jsonOut({ success: false, command: "import", error: "File path required" });
 		} else {
-			errorOut("Usage: cn import <path> --name <name> [--no-split] [--tag <tag>]");
+			errorOut("Usage: luuna-beacon import <path> --name <name> [--no-split] [--tag <tag>]");
 		}
 		throw new ExitError(1);
 	}

@@ -46,7 +46,7 @@ afterEach(() => {
 	if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true });
 });
 
-describe("cn schema", () => {
+describe("luuna-beacon schema", () => {
 	it("creates a schema", async () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
@@ -133,7 +133,7 @@ describe("cn schema", () => {
 			);
 
 			// Manually add sections
-			const promptsPath = join(tmpDir, ".canopy", "prompts.jsonl");
+			const promptsPath = join(tmpDir, ".luuna", "beacon", "prompts.jsonl");
 			const records = await readJsonl<Prompt>(promptsPath);
 			const current = dedupById(records);
 			const prompt = current.find((p) => p.name === "good-agent");
@@ -172,7 +172,7 @@ describe("cn schema", () => {
 			);
 
 			// Only add "role", missing "constraints"
-			const promptsPath = join(tmpDir, ".canopy", "prompts.jsonl");
+			const promptsPath = join(tmpDir, ".luuna", "beacon", "prompts.jsonl");
 			const records = await readJsonl<Prompt>(promptsPath);
 			const current = dedupById(records);
 			const prompt = current.find((p) => p.name === "bad-agent");

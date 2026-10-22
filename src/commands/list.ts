@@ -3,13 +3,14 @@ import type { Command } from "commander";
 import { c, humanOut, jsonOut } from "../output.ts";
 import { dedupById, readJsonl } from "../store.ts";
 import type { Prompt } from "../types.ts";
+import { promptsFile } from "../paths.ts";
 
 export default async function list(args: string[], json: boolean): Promise<void> {
 	const cwd = process.cwd();
-	const promptsPath = join(cwd, ".canopy", "prompts.jsonl");
+	const promptsPath = promptsFile(cwd);
 
 	if (args.includes("--help") || args.includes("-h")) {
-		humanOut(`Usage: cn list [options]
+		humanOut(`Usage: luuna-beacon list [options]
 
 Options:
   --tag <tag>     Filter by tag

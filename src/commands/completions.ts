@@ -1,5 +1,5 @@
 /**
- * Shell completion generation for canopy CLI.
+ * Shell completion generation for the luuna-beacon CLI.
  *
  * Generates completion scripts for bash, zsh, and fish shells.
  */
@@ -31,7 +31,7 @@ interface CommandDef {
 export const COMMANDS: readonly CommandDef[] = [
 	{
 		name: "init",
-		desc: "Initialize .canopy/ in current directory",
+		desc: "Initialize .luuna/beacon/ in current directory",
 		flags: [
 			{ name: "--json", desc: "JSON output" },
 			{ name: "--help", desc: "Show help" },
@@ -96,7 +96,7 @@ export const COMMANDS: readonly CommandDef[] = [
 	},
 	{
 		name: "sync",
-		desc: "Stage and commit .canopy/ changes",
+		desc: "Stage and commit .luuna/beacon/ changes",
 		flags: [
 			{ name: "--status", desc: "Check sync status without committing" },
 			{ name: "--json", desc: "JSON output" },
@@ -256,7 +256,7 @@ export const COMMANDS: readonly CommandDef[] = [
 	},
 	{
 		name: "onboard",
-		desc: "Add canopy section to CLAUDE.md",
+		desc: "Add luuna-beacon section to CLAUDE.md",
 		flags: [
 			{ name: "--check", desc: "Report status without writing" },
 			{ name: "--stdout", desc: "Print snippet to stdout" },
@@ -292,7 +292,7 @@ export const COMMANDS: readonly CommandDef[] = [
 	},
 	{
 		name: "upgrade",
-		desc: "Upgrade canopy to the latest version",
+		desc: "Upgrade luuna-beacon to the latest version",
 		flags: [
 			{ name: "--check", desc: "Check for updates without installing" },
 			{ name: "--json", desc: "JSON output" },
@@ -306,7 +306,7 @@ export const COMMANDS: readonly CommandDef[] = [
 	},
 ] as const;
 
-const BIN = "cn";
+const BIN = "luuna-beacon";
 
 export function generateBash(): string {
 	const lines: string[] = [
@@ -552,7 +552,7 @@ export function generateFish(): string {
 }
 
 /**
- * Register the `cn completions` command.
+ * Register the `luuna-beacon completions` command.
  */
 export function registerCompletionsCommand(program: Command): void {
 	program
@@ -572,7 +572,7 @@ export function completionsCommand(args: string[], json = false): void {
 			jsonOut({ success: false, command: "completions", error: "Missing shell argument" });
 		} else {
 			errorOut("Error: missing shell argument");
-			process.stderr.write("Usage: cn completions <bash|zsh|fish>\n");
+			process.stderr.write("Usage: luuna-beacon completions <bash|zsh|fish>\n");
 		}
 		throw new ExitError(1);
 	}

@@ -87,7 +87,7 @@ const VALID_ON_EMPTY = new Set(["skip", "warn", "error"]);
  * Validate the shape of a prompt's `mulch` block and `extends_mulch` flag.
  * Returns structural errors (unknown keys, wrong types, bad enum values).
  * Does not check semantics like "domains exist in .mulch/mulch.config.yaml" —
- * that lives in the optional doctor check (canopy-552d).
+ * that lives in the optional doctor check (upstream tracker).
  */
 export function validateMulch(prompt: Prompt): ValidationError[] {
 	const errors: ValidationError[] = [];

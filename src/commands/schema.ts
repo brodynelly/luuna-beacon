@@ -5,10 +5,11 @@ import { c, errorOut, fmt, humanOut, jsonOut } from "../output.ts";
 import { acquireLock, appendJsonl, dedupByIdLast, readJsonl, releaseLock } from "../store.ts";
 import type { Schema, ValidationRule } from "../types.ts";
 import { ExitError } from "../types.ts";
+import { schemasFile } from "../paths.ts";
 
 export default async function schema(args: string[], json: boolean): Promise<void> {
 	if (args.includes("--help") || args.includes("-h")) {
-		humanOut(`Usage: cn schema <subcommand> [options]
+		humanOut(`Usage: luuna-beacon schema <subcommand> [options]
 
 Subcommands:
   create --name <name> --required <sections> [--optional <sections>]
@@ -46,7 +47,7 @@ Options:
 				jsonOut({ success: false, command: "schema", error: `Unknown subcommand: ${subcommand}` });
 			} else {
 				errorOut(
-					`Unknown schema subcommand: ${subcommand}\nUsage: cn schema create|show|list|rule`,
+					`Unknown schema subcommand: ${subcommand}\nUsage: luuna-beacon schema create|show|list|rule`,
 				);
 			}
 			throw new ExitError(1);
@@ -55,7 +56,7 @@ Options:
 
 async function schemaCreate(args: string[], json: boolean): Promise<void> {
 	const cwd = process.cwd();
-	const schemasPath = join(cwd, ".canopy", "schemas.jsonl");
+	const schemasPath = schemasFile(cwd);
 
 	let name = "";
 	const requiredSections: string[] = [];
@@ -135,14 +136,14 @@ async function schemaCreate(args: string[], json: boolean): Promise<void> {
 
 async function schemaShow(args: string[], json: boolean): Promise<void> {
 	const cwd = process.cwd();
-	const schemasPath = join(cwd, ".canopy", "schemas.jsonl");
+	const schemasPath = schemasFile(cwd);
 
 	const name = args.filter((a) => !a.startsWith("--"))[0];
 	if (!name) {
 		if (json) {
 			jsonOut({ success: false, command: "schema show", error: "Schema name required" });
 		} else {
-			errorOut("Usage: cn schema show <name>");
+			errorOut("Usage: luuna-beacon schema show <name>");
 		}
 		throw new ExitError(1);
 	}
@@ -179,7 +180,7 @@ async function schemaShow(args: string[], json: boolean): Promise<void> {
 
 async function schemaList(_args: string[], json: boolean): Promise<void> {
 	const cwd = process.cwd();
-	const schemasPath = join(cwd, ".canopy", "schemas.jsonl");
+	const schemasPath = schemasFile(cwd);
 
 	const allRecords = await readJsonl<Schema>(schemasPath);
 	const schemas = dedupByIdLast(allRecords);
@@ -200,7 +201,7 @@ async function schemaList(_args: string[], json: boolean): Promise<void> {
 
 async function schemaRuleAdd(args: string[], json: boolean): Promise<void> {
 	const cwd = process.cwd();
-	const schemasPath = join(cwd, ".canopy", "schemas.jsonl");
+	const schemasPath = schemasFile(cwd);
 
 	const schemaName = args.filter((a) => !a.startsWith("--"))[0];
 	if (!schemaName) {
@@ -208,7 +209,7 @@ async function schemaRuleAdd(args: string[], json: boolean): Promise<void> {
 			jsonOut({ success: false, command: "schema rule add", error: "Schema name required" });
 		} else {
 			errorOut(
-				"Usage: cn schema rule add <schema-name> --section <name> --pattern <regex> --message <text>",
+				"Usage: luuna-beacon schema rule add <schema-name> --section <name> --pattern <regex> --message <text>",
 			);
 		}
 		throw new ExitError(1);

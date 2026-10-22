@@ -46,7 +46,7 @@ afterEach(() => {
 	if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true });
 });
 
-describe("cn pin", () => {
+describe("luuna-beacon pin", () => {
 	it("pins a prompt to a specific version", async () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
@@ -54,7 +54,7 @@ describe("cn pin", () => {
 			// Create prompt (version 1), then create version 2 via a store append
 			await captureOutput(() => create(["--name", "my-prompt"], false));
 
-			const promptsPath = join(tmpDir, ".canopy", "prompts.jsonl");
+			const promptsPath = join(tmpDir, ".luuna", "beacon", "prompts.jsonl");
 			const records = await readJsonl<Prompt>(promptsPath);
 			const current = dedupById(records);
 			const p = current.find((x) => x.name === "my-prompt");
@@ -89,7 +89,7 @@ describe("cn pin", () => {
 		try {
 			await captureOutput(() => create(["--name", "json-prompt"], false));
 
-			const promptsPath = join(tmpDir, ".canopy", "prompts.jsonl");
+			const promptsPath = join(tmpDir, ".luuna", "beacon", "prompts.jsonl");
 			const records = await readJsonl<Prompt>(promptsPath);
 			const current = dedupById(records);
 			const p = current.find((x) => x.name === "json-prompt");
@@ -208,14 +208,14 @@ describe("cn pin", () => {
 	});
 });
 
-describe("cn unpin", () => {
+describe("luuna-beacon unpin", () => {
 	it("unpins a pinned prompt", async () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
 		try {
 			await captureOutput(() => create(["--name", "pinned-prompt"], false));
 
-			const promptsPath = join(tmpDir, ".canopy", "prompts.jsonl");
+			const promptsPath = join(tmpDir, ".luuna", "beacon", "prompts.jsonl");
 			const records = await readJsonl<Prompt>(promptsPath);
 			const current = dedupById(records);
 			const p = current.find((x) => x.name === "pinned-prompt");
@@ -246,7 +246,7 @@ describe("cn unpin", () => {
 		try {
 			await captureOutput(() => create(["--name", "up-prompt"], false));
 
-			const promptsPath = join(tmpDir, ".canopy", "prompts.jsonl");
+			const promptsPath = join(tmpDir, ".luuna", "beacon", "prompts.jsonl");
 			const records = await readJsonl<Prompt>(promptsPath);
 			const current = dedupById(records);
 			const p = current.find((x) => x.name === "up-prompt");
@@ -305,7 +305,7 @@ describe("cn unpin", () => {
 		try {
 			await captureOutput(() => create(["--name", "persist-prompt"], false));
 
-			const promptsPath = join(tmpDir, ".canopy", "prompts.jsonl");
+			const promptsPath = join(tmpDir, ".luuna", "beacon", "prompts.jsonl");
 			const records = await readJsonl<Prompt>(promptsPath);
 			const current = dedupById(records);
 			const p = current.find((x) => x.name === "persist-prompt");

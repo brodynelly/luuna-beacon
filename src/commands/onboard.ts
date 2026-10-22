@@ -7,28 +7,28 @@ import { humanOut, isQuiet, jsonOut } from "../output.ts";
 const CANDIDATE_FILES = ["CLAUDE.md", ".claude/CLAUDE.md", "AGENTS.md"] as const;
 
 function onboardSnippet(): string {
-	return `## Prompt Management (Canopy)
+	return `## Prompt Management (Luuna Beacon)
 ${VERSION_MARKER}
 
-This project uses [Canopy](https://github.com/jayminwest/canopy) for git-native prompt management.
+This project uses Luuna Beacon (\`lb\`) for git-native prompt management.
 
 **At the start of every session**, run:
 \`\`\`
-cn prime
+lb prime
 \`\`\`
 
 This injects prompt workflow context: commands, conventions, and common workflows.
 
 **Quick reference:**
-- \`cn list\` — List all prompts
-- \`cn render <name>\` — View rendered prompt (resolves inheritance)
-- \`cn emit --all\` — Render prompts to files
-- \`cn update <name>\` — Update a prompt (creates new version)
-- \`cn sync\` — Stage and commit .canopy/ changes
+- \`lb list\` — List all prompts
+- \`lb render <name>\` — View rendered prompt (resolves inheritance)
+- \`lb emit --all\` — Render prompts to files
+- \`lb update <name>\` — Update a prompt (creates new version)
+- \`lb sync\` — Stage and commit .luuna/beacon/ changes
 
-**Do not manually edit emitted files.** Use \`cn update\` to modify prompts, then \`cn emit\` to regenerate.
+**Do not manually edit emitted files.** Use \`lb update\` to modify prompts, then \`lb emit\` to regenerate.
 
-**Mulch metadata:** Prompts can declare expertise dependencies via \`mulch.prime.domains\`, \`mulch.prime.files\`, \`mulch.budget\`, \`mulch.on_empty\`, plus a top-level \`extends_mulch\` flag (override-by-default; merge with parent when \`true\`). Canopy never shells out to \`ml\` — \`cn render --json\` surfaces the resolved declaration in a top-level \`mulch\` field for consumers to act on. See SPEC.md "Mulch Metadata".`;
+**Mulch metadata:** Prompts can declare expertise dependencies via \`mulch.prime.domains\`, \`mulch.prime.files\`, \`mulch.budget\`, \`mulch.on_empty\`, plus a top-level \`extends_mulch\` flag (override-by-default; merge with parent when \`true\`). Luuna Beacon never shells out to \`ml\` — \`lb render --json\` surfaces the resolved declaration in a top-level \`mulch\` field for consumers to act on. See SPEC.md "Mulch Metadata".`;
 }
 
 function findTargetFile(projectRoot: string): string | null {
@@ -43,9 +43,9 @@ function findTargetFile(projectRoot: string): string | null {
 
 export default async function onboard(args: string[], json: boolean): Promise<void> {
 	if (args.includes("--help") || args.includes("-h")) {
-		humanOut(`Usage: cn onboard [options]
+		humanOut(`Usage: luuna-beacon onboard [options]
 
-Adds a canopy section to CLAUDE.md (or creates it) so AI agents discover prompt workflows.
+Adds a lb section to CLAUDE.md (or creates it) so AI agents discover prompt workflows.
 
 Options:
   --check     Report status without writing (missing, current, outdated)
@@ -100,7 +100,7 @@ Options:
 		if (json) {
 			jsonOut({ success: true, command: "onboard", action: "created", file: filePath });
 		} else {
-			humanOut(`Created ${filePath} with canopy section`);
+			humanOut(`Created ${filePath} with lb section`);
 		}
 		return;
 	}
@@ -112,7 +112,7 @@ Options:
 		if (json) {
 			jsonOut({ success: true, command: "onboard", action: "unchanged", file: filePath });
 		} else {
-			humanOut("Canopy section is already up to date");
+			humanOut("Luuna Beacon section is already up to date");
 		}
 		return;
 	}
@@ -124,7 +124,7 @@ Options:
 			if (json) {
 				jsonOut({ success: true, command: "onboard", action: "updated", file: filePath });
 			} else {
-				humanOut(`Updated canopy section in ${filePath}`);
+				humanOut(`Updated lb section in ${filePath}`);
 			}
 		}
 		return;
@@ -136,14 +136,14 @@ Options:
 	if (json) {
 		jsonOut({ success: true, command: "onboard", action: "appended", file: filePath });
 	} else {
-		humanOut(`Added canopy section to ${filePath}`);
+		humanOut(`Added lb section to ${filePath}`);
 	}
 }
 
 export function registerOnboardCommand(program: Command): void {
 	program
 		.command("onboard")
-		.description("Add canopy section to CLAUDE.md for AI agent discovery")
+		.description("Add lb section to CLAUDE.md for AI agent discovery")
 		.option("--check", "Report status without writing (missing, current, outdated)")
 		.option("--stdout", "Print snippet to stdout without writing to file")
 		.action(async (opts: Record<string, unknown>) => {

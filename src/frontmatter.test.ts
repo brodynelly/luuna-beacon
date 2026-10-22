@@ -64,13 +64,13 @@ tools:
 		const content = `---
 contextContract:
   emitDir: agents
-  prefix: cn
+  prefix: lb
 ---
 `;
 		const { metadata } = extractFrontmatter(content);
 		expect(metadata.contextContract).toEqual({
 			emitDir: "agents",
-			prefix: "cn",
+			prefix: "lb",
 		});
 	});
 
@@ -186,11 +186,11 @@ describe("renderFrontmatter", () => {
 
 	it("serializes nested objects", () => {
 		const result = renderFrontmatter({
-			contextContract: { emitDir: "agents", prefix: "cn" },
+			contextContract: { emitDir: "agents", prefix: "lb" },
 		});
 		expect(result).toContain("contextContract:");
 		expect(result).toContain("  emitDir: agents");
-		expect(result).toContain("  prefix: cn");
+		expect(result).toContain("  prefix: lb");
 	});
 
 	it("serializes booleans and numbers", () => {

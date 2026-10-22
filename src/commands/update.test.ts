@@ -45,7 +45,7 @@ afterEach(() => {
 	if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true });
 });
 
-describe("cn update", () => {
+describe("luuna-beacon update", () => {
 	it("bumps version on update", async () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);

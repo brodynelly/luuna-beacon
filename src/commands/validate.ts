@@ -5,11 +5,12 @@ import { dedupById, dedupByIdLast, readJsonl } from "../store.ts";
 import type { Prompt, Schema } from "../types.ts";
 import { ExitError } from "../types.ts";
 import { validatePrompt } from "../validate.ts";
+import { promptsFile, schemasFile } from "../paths.ts";
 
 export default async function validate(args: string[], json: boolean): Promise<void> {
 	const cwd = process.cwd();
-	const promptsPath = join(cwd, ".canopy", "prompts.jsonl");
-	const schemasPath = join(cwd, ".canopy", "schemas.jsonl");
+	const promptsPath = promptsFile(cwd);
+	const schemasPath = schemasFile(cwd);
 
 	const allMode = args.includes("--all");
 
@@ -19,8 +20,8 @@ export default async function validate(args: string[], json: boolean): Promise<v
 	const currentSchemas = dedupByIdLast(allSchemaRecords);
 
 	if (args.includes("--help") || args.includes("-h")) {
-		humanOut(`Usage: cn validate <name> [options]
-       cn validate --all
+		humanOut(`Usage: luuna-beacon validate <name> [options]
+       luuna-beacon validate --all
 
 Options:
   --all     Validate all prompts with schemas
@@ -79,7 +80,7 @@ Options:
 		if (json) {
 			jsonOut({ success: false, command: "validate", error: "Prompt name or --all required" });
 		} else {
-			errorOut("Usage: cn validate <name> or cn validate --all");
+			errorOut("Usage: luuna-beacon validate <name> or luuna-beacon validate --all");
 		}
 		throw new ExitError(1);
 	}

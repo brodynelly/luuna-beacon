@@ -521,7 +521,7 @@ describe("resolvePrompt", () => {
 					name: "base",
 					sections: [],
 					mulch: {
-						prime: { domains: ["canopy"], files: ["src/render.ts"] },
+						prime: { domains: ["beacon"], files: ["src/render.ts"] },
 						budget: 5000,
 						on_empty: "warn",
 					},
@@ -530,7 +530,7 @@ describe("resolvePrompt", () => {
 
 			const result = resolvePrompt("base", prompts);
 			expect(result.mulch).toEqual({
-				prime: { domains: ["canopy"], files: ["src/render.ts"] },
+				prime: { domains: ["beacon"], files: ["src/render.ts"] },
 				budget: 5000,
 				on_empty: "warn",
 			});

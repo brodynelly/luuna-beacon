@@ -1,8 +1,8 @@
-# Canopy
+# Luuna Beacon
 
 Git-native prompt management for AI agent workflows. Minimal dependencies, JSONL storage, Bun runtime.
 
-Prompts are structured records with composable sections, inheritance, versioning, and schema validation. The JSONL file IS the database. `cn emit` renders prompts to plain `.md` files for consumption by any tool.
+Prompts are structured records with composable sections, inheritance, versioning, and schema validation. The JSONL file IS the database. `luuna-beacon emit` renders prompts to plain `.md` files for consumption by any tool.
 
 ## Why
 
@@ -20,17 +20,17 @@ Overstory manages 7 agent definitions, 2 templates, and generates per-task overl
 ## Design Principles
 
 1. **JSONL is the database.** No binary files, no export pipeline, no sync step. One file per record type, diffable, mergeable.
-2. **Minimal runtime dependencies.** Bun built-ins (`Bun.file`, `Bun.write`, `node:fs`, `node:crypto`) plus three packages: `chalk`, `commander`, and `ajv` (JSON Schema validation for `cn config`).
+2. **Minimal runtime dependencies.** Bun built-ins (`Bun.file`, `Bun.write`, `node:fs`, `node:crypto`) plus three packages: `chalk`, `commander`, and `ajv` (JSON Schema validation for `luuna-beacon config`).
 3. **Concurrent-safe by default.** Advisory file locks + atomic writes. Multiple agents in worktrees can read/write safely.
 4. **Git-native.** `merge=union` gitattribute handles parallel branch merges. No custom merge driver needed.
 5. **Prompts are composed, not duplicated.** Sections are the unit of reuse. Inheritance eliminates copy-paste. Change once, propagate everywhere.
-6. **Emit to plain files.** Canopy is the source of truth; downstream tools consume rendered `.md` files via `cn emit`. Adoption is incremental — no tool needs to understand canopy natively.
+6. **Emit to plain files.** Luuna Beacon is the source of truth; downstream tools consume rendered `.md` files via `luuna-beacon emit`. Adoption is incremental — no tool needs to understand luuna-beacon natively.
 7. **Ecosystem fit.** Same stack as overstory (Bun/TS), same patterns as mulch/seeds (JSONL + locks), same CLI conventions (`--json` flag on everything).
 
 ## On-Disk Format
 
 ```
-.canopy/
+.luuna/beacon/
   config.yaml          # Project config (YAML, matches overstory/mulch/seeds convention)
   prompts.jsonl        # All prompt records with version history
   schemas.jsonl        # Validation schema definitions
@@ -54,7 +54,7 @@ targets:
 
 The `project` field is used as the ID prefix (e.g., `overstory-a1b2`). The `targets` section defines named emit targets — each with a directory, an optional `default: true` marker, and optional tags for routing prompts by tag.
 
-When `cn emit` resolves the output directory for a prompt:
+When `luuna-beacon emit` resolves the output directory for a prompt:
 1. Per-prompt `emitDir` override (if set on the prompt)
 2. First target whose `tags` match one of the prompt's tags
 3. Target marked `default: true`
@@ -62,7 +62,7 @@ When `cn emit` resolves the output directory for a prompt:
 
 Legacy configs using `emitDir`/`emitDirByTag` are transparently converted to named targets on load.
 
-YAML parsed by a minimal built-in parser that handles nested maps, arrays, flat key-value pairs, and flow-style scalars (`{key: value}`, `[a, b, c]`) via `parseScalarOrFlow` for `cn config set` inputs. No external YAML dependency.
+YAML parsed by a minimal built-in parser that handles nested maps, arrays, flat key-value pairs, and flow-style scalars (`{key: value}`, `[a, b, c]`) via `parseScalarOrFlow` for `luuna-beacon config set` inputs. No external YAML dependency.
 
 ### prompts.jsonl
 
@@ -90,11 +90,11 @@ Validation schema definitions, one per line:
 ### .gitattributes (appended to project root)
 
 ```
-.canopy/prompts.jsonl merge=union
-.canopy/schemas.jsonl merge=union
+.luuna/beacon/prompts.jsonl merge=union
+.luuna/beacon/schemas.jsonl merge=union
 ```
 
-Union merge strategy: on branch merge, git takes lines from both sides. Since each record is one line with a unique ID, this produces correct results for parallel work. Duplicate lines (same prompt modified on both branches) are handled by canopy's dedup-on-read — last occurrence wins (highest version number for same ID).
+Union merge strategy: on branch merge, git takes lines from both sides. Since each record is one line with a unique ID, this produces correct results for parallel work. Duplicate lines (same prompt modified on both branches) are handled by luuna-beacon's dedup-on-read — last occurrence wins (highest version number for same ID).
 
 ## Data Model
 
@@ -140,7 +140,7 @@ interface Prompt {
   // Metadata
   tags?: string[];           // Freeform tags for filtering
   schema?: string;           // Schema name for validation
-  emitAs?: string;           // Override filename for cn emit (default: {name}.md)
+  emitAs?: string;           // Override filename for luuna-beacon emit (default: {name}.md)
   emitDir?: string;          // Override emit directory
   pinned?: number;           // Pinned version (used by render/emit)
   frontmatter?: Record<string, unknown>;  // Free-form metadata, shallow-merged across chain
@@ -208,7 +208,7 @@ draft ──> active ──> archived
   └──────────┘  (reactivate via update --status=active)
 ```
 
-- `draft` — work in progress, excluded from `cn emit --all`
+- `draft` — work in progress, excluded from `luuna-beacon emit --all`
 - `active` — current, included in emit and validation
 - `archived` — soft-deleted, excluded from listings (still queryable with `--status archived`)
 
@@ -218,7 +218,7 @@ draft ──> active ──> archived
 
 A prompt can extend one parent via the `extends` field. The parent is referenced by name (not ID), so renaming breaks the chain intentionally (forces explicit update).
 
-Resolution order for `cn render`:
+Resolution order for `luuna-beacon render`:
 1. Start with the parent's rendered sections (recursively resolved if parent also extends)
 2. For each section in the child:
    - If a section with the same name exists in the parent: **override** (child's body replaces parent's)
@@ -240,7 +240,7 @@ Rendered `builder` output contains: role (builder's), capabilities (builder's), 
 `extends` covers single inheritance — one parent, one chain. When a prompt needs to compose traits from independent parents (e.g., a co-creation workflow plus a red-hat critique trait), use `mixins`:
 
 ```bash
-cn create cautious-review --extends ov-co-creation --mixin ov-red-hat
+luuna-beacon create cautious-review --extends ov-co-creation --mixin ov-red-hat
 ```
 
 The `mixins` field is an array of prompt names applied left-to-right on top of the `extends` chain, before the focal prompt's own sections. Resolution order:
@@ -268,27 +268,27 @@ Mulch metadata inherits through mixins under the same `extends_mulch` flag — s
 A child prompt can explicitly remove an inherited section by including it with an empty body:
 
 ```bash
-cn update builder --section quality-gates --body ""
+luuna-beacon update builder --section quality-gates --body ""
 ```
 
 This is recorded as a section with `body: ""`, which the renderer interprets as "do not include this section in output." Useful when a child legitimately doesn't need a parent section.
 
 ### Depth Limit
 
-Inheritance depth is capped at 5 levels. This is enforced at render time — if resolution exceeds 5 levels, `cn render` errors with a clear message. In practice, 2-3 levels covers all real use cases (base → capability → specialization).
+Inheritance depth is capped at 5 levels. This is enforced at render time — if resolution exceeds 5 levels, `luuna-beacon render` errors with a clear message. In practice, 2-3 levels covers all real use cases (base → capability → specialization).
 
 ### Circular Reference Detection
 
-`cn render` tracks visited prompt names during resolution. If a cycle is detected, it errors immediately with the chain (e.g., "Circular inheritance: builder → base-agent → builder").
+`luuna-beacon render` tracks visited prompt names during resolution. If a cycle is detected, it errors immediately with the chain (e.g., "Circular inheritance: builder → base-agent → builder").
 
 ## Mulch Metadata
 
-Roles often need specific [mulch](https://github.com/jayminwest/mulch) expertise to do their job. Canopy lets a prompt declare those dependencies inline as part of the role definition, so the declaration travels with the role through inheritance and emit. The declaration is metadata only — **canopy never shells out to `ml`** at render time. Consumers (e.g., warren, overstory) read the resolved `mulch` field from the render envelope and run `ml prime` themselves.
+Roles often need specific [mulch](https://github.com/jayminwest/mulch) expertise to do their job. Luuna Beacon lets a prompt declare those dependencies inline as part of the role definition, so the declaration travels with the role through inheritance and emit. The declaration is metadata only — **luuna-beacon never shells out to `ml`** at render time. Consumers (e.g., warren, overstory) read the resolved `mulch` field from the render envelope and run `ml prime` themselves.
 
 ### Schema
 
 ```jsonl
-{"name":"builder","extends":"base-agent","extends_mulch":true,"mulch":{"prime":{"domains":["canopy","cicd"],"files":["src/**/*.ts"]},"budget":50,"on_empty":"warn"},"sections":[...]}
+{"name":"builder","extends":"base-agent","extends_mulch":true,"mulch":{"prime":{"domains":["beacon","cicd"],"files":["src/**/*.ts"]},"budget":50,"on_empty":"warn"},"sections":[...]}
 ```
 
 - `mulch.prime.domains` — array of domain names (must be strings)
@@ -316,7 +316,7 @@ Mixins follow the same rule: when the focal prompt sets `extends_mulch: true`, e
 
 ### Render Envelope
 
-`cn render <name> --json` and `cn render <name> --format json` surface the resolved declaration as a top-level field:
+`luuna-beacon render <name> --json` and `luuna-beacon render <name> --format json` surface the resolved declaration as a top-level field:
 
 ```json
 {
@@ -328,7 +328,7 @@ Mixins follow the same rule: when the focal prompt sets `extends_mulch: true`, e
   "resolvedFrom": ["base-agent", "builder"],
   "frontmatter": {...},
   "mulch": {
-    "prime": { "domains": ["canopy", "cicd"], "files": ["src/**/*.ts"] },
+    "prime": { "domains": ["luuna-beacon", "cicd"], "files": ["src/**/*.ts"] },
     "budget": 50,
     "on_empty": "warn"
   }
@@ -337,11 +337,11 @@ Mixins follow the same rule: when the focal prompt sets `extends_mulch: true`, e
 
 The `mulch` key is **omitted entirely** (not `null`, not `{}`) when no role in the chain declared a mulch block. Consumers should treat absent and empty as semantically distinct — absent means "no opinion," empty means "this prompt actively declares no mulch."
 
-`cn render --format md` still emits the rendered markdown (sections only) to stdout; the mulch declaration is only surfaced through the JSON envelopes above.
+`luuna-beacon render --format md` still emits the rendered markdown (sections only) to stdout; the mulch declaration is only surfaced through the JSON envelopes above.
 
 ### No Shell-Out Invariant
 
-`cn render` does not invoke `ml` or any other external process. The mulch declaration is metadata in the prompt record — canopy resolves it the same way it resolves sections and frontmatter, with no network or subprocess calls. This keeps canopy a pure prompt-template engine and decouples its release cadence from mulch.
+`luuna-beacon render` does not invoke `ml` or any other external process. The mulch declaration is metadata in the prompt record — luuna-beacon resolves it the same way it resolves sections and frontmatter, with no network or subprocess calls. This keeps luuna-beacon a pure prompt-template engine and decouples its release cadence from mulch.
 
 ### Validation
 
@@ -356,17 +356,17 @@ The schema validator rejects malformed declarations with structural errors (this
 
 ### Doctor Check
 
-`cn doctor` runs an optional `mulch-domains` check that consults `.mulch/mulch.config.yaml` when present:
+`luuna-beacon doctor` runs an optional `mulch-domains` check that consults `.luuna/atlas/config.yaml` when present:
 
-- If `.mulch/mulch.config.yaml` is missing, the check passes with `"No .mulch/mulch.config.yaml found (skipped)"` — canopy works fine without mulch
+- If `.luuna/atlas/config.yaml` is missing, the check passes with `"No .luuna/atlas/config.yaml found (skipped)"` — luuna-beacon works fine without mulch
 - If present, every domain referenced by a non-archived prompt's `mulch.prime.domains` is checked against the config's `domains:` list
 - Unknown domains produce a **warning** (not an error) — the message labels which mulch config was consulted, so multi-repo setups (root vs sub-repo `.mulch/`) can disambiguate
 
-This is a typo guard, not a hard gate — canopy never refuses to render a prompt because of an unknown domain.
+This is a typo guard, not a hard gate — luuna-beacon never refuses to render a prompt because of an unknown domain.
 
 ## Versioning Model
 
-Every `cn update` appends a new JSONL line with an incremented version number. The prompts.jsonl file contains the full version history.
+Every `luuna-beacon update` appends a new JSONL line with an incremented version number. The prompts.jsonl file contains the full version history.
 
 ```jsonl
 {"id":"overstory-a1b2","name":"builder","version":1,"sections":[...],...}
@@ -381,10 +381,10 @@ Current state: last line for each ID (highest version). This is the same dedup-o
 A prompt can be pinned to a specific version:
 
 ```bash
-cn pin builder@2
+luuna-beacon pin builder@2
 ```
 
-When pinned, `cn render builder` and `cn emit builder` use version 2 instead of the latest. The pin is stored as metadata on the prompt record (a new line appended with `pinned: 2`). `cn unpin builder` removes the pin.
+When pinned, `luuna-beacon render builder` and `luuna-beacon emit builder` use version 2 instead of the latest. The pin is stored as metadata on the prompt record (a new line appended with `pinned: 2`). `luuna-beacon unpin builder` removes the pin.
 
 Pinning is useful when a child prompt depends on a stable parent — pin the parent to avoid unexpected inheritance changes.
 
@@ -393,24 +393,24 @@ Pinning is useful when a child prompt depends on a stable parent — pin the par
 Version history enables structured diffing:
 
 ```bash
-cn history builder           # Show all versions with timestamps
-cn diff builder 1 3          # Show what changed between v1 and v3
+luuna-beacon history builder           # Show all versions with timestamps
+luuna-beacon diff builder 1 3          # Show what changed between v1 and v3
 ```
 
 The diff output is section-aware: it shows which sections were added, removed, or modified — not just a line-by-line text diff. This is the key advantage over `git diff` on a raw `.md` file.
 
 ## CLI
 
-Binary name: `cn` (canopy).
+Binary name: `luuna-beacon` (alias `lb`).
 
 Every command supports `--json` for structured output. Non-JSON output is human-readable with ANSI colors (respects `NO_COLOR`).
 
 ### Prompt Commands
 
 ```
-cn init                                Initialize .canopy/ in current directory
+luuna-beacon init                                Initialize .luuna/beacon/ in current directory
 
-cn create                              Create a new prompt
+luuna-beacon create                              Create a new prompt
   --name <text>        (required)      Unique prompt name
   --extends <name>                     Parent prompt to inherit from
   --tag <tag>                          Add tag (repeatable)
@@ -418,15 +418,15 @@ cn create                              Create a new prompt
   --emit-as <filename>                 Override emit filename (default: {name}.md)
   --status <status>    draft|active (default: active)
 
-cn show <name>                         Show prompt record (raw sections)
-cn show <name>@<version>               Show specific version
+luuna-beacon show <name>                         Show prompt record (raw sections)
+luuna-beacon show <name>@<version>               Show specific version
 
-cn list                                List prompts
+luuna-beacon list                                List prompts
   --tag <tag>                          Filter by tag
   --status <status>    draft|active|archived
   --extends <name>                     Show children of a parent
 
-cn update <name>                       Update a prompt (creates new version)
+luuna-beacon update <name>                       Update a prompt (creates new version)
   --section <name> --body <content>    Update a section's body
   --add-section <name> --body <content> Add a new section
   --remove-section <name>              Remove a section (empty body override)
@@ -438,88 +438,88 @@ cn update <name>                       Update a prompt (creates new version)
   --status <status>                    Change status
   --name <new-name>                    Rename prompt
 
-cn archive <name>                      Archive a prompt (soft delete)
+luuna-beacon archive <name>                      Archive a prompt (soft delete)
 
-cn render <name>                       Render full prompt (resolve inheritance)
+luuna-beacon render <name>                       Render full prompt (resolve inheritance)
   --format md                          Output as markdown (default)
   --format json                        Output as structured JSON
-cn render <name>@<version>             Render specific version
+luuna-beacon render <name>@<version>             Render specific version
 
-cn tree <name>                         Show inheritance tree (parent and children)
+luuna-beacon tree <name>                         Show inheritance tree (parent and children)
 
-cn history <name>                      Show version timeline
+luuna-beacon history <name>                      Show version timeline
   --limit <n>                          Max versions to show (default: 20)
 
-cn diff <name> <v1> <v2>              Section-aware diff between two versions
+luuna-beacon diff <name> <v1> <v2>              Section-aware diff between two versions
 
-cn pin <name>@<version>                Pin prompt to a specific version
-cn unpin <name>                        Remove version pin
+luuna-beacon pin <name>@<version>                Pin prompt to a specific version
+luuna-beacon unpin <name>                        Remove version pin
 ```
 
 ### Emit Commands
 
 ```
-cn emit <name>                         Render and write prompt to a file
+luuna-beacon emit <name>                         Render and write prompt to a file
   --out <path>                         Output path (default: {emitDir}/{emitAs or name}.md)
   --force                              Overwrite without confirmation
 
-cn emit --all                          Emit all active prompts
+luuna-beacon emit --all                          Emit all active prompts
   --out-dir <dir>                      Output directory (default: config.emitDir)
   --force                              Overwrite without confirmation
   --dry-run                            Show what would be emitted without writing
 
-cn emit --check                        Check if emitted files are up to date
+luuna-beacon emit --check                        Check if emitted files are up to date
                                        Exit code 1 if stale (useful in CI)
 ```
 
 ### Schema Commands
 
 ```
-cn schema create                       Create a validation schema
+luuna-beacon schema create                       Create a validation schema
   --name <text>        (required)
   --required <sections>                Comma-separated required section names
   --optional <sections>                Comma-separated optional section names
 
-cn schema show <name>                  Show schema details
+luuna-beacon schema show <name>                  Show schema details
 
-cn schema list                         List all schemas
+luuna-beacon schema list                         List all schemas
 
-cn schema rule add <schema-name>       Add a validation rule
+luuna-beacon schema rule add <schema-name>       Add a validation rule
   --section <name>     (required)      Section to validate
   --pattern <regex>    (required)      Regex that must match
   --message <text>     (required)      Error message on failure
 
-cn validate <name>                     Validate a prompt against its schema
-cn validate --all                      Validate all prompts with schemas
+luuna-beacon validate <name>                     Validate a prompt against its schema
+luuna-beacon validate --all                      Validate all prompts with schemas
 ```
 
 ### Config Commands
 
 ```
-cn config schema                       Emit the JSON Schema for .canopy/config.yaml
+luuna-beacon config schema                       Emit the JSON Schema for .luuna/beacon/config.yaml
   --json                               Compact single-line JSON (default is pretty-printed)
 
-cn config show                         Print the current config (or a value at --path)
+luuna-beacon config show                         Print the current config (or a value at --path)
   --path <dot.path>                    Dot-path to read (e.g. targets.default.dir)
   --json                               Envelope output as JSON
 
-cn config set <path> <value>           Validate and write a value at <path>
+luuna-beacon config set <path> <value>           Validate and write a value at <path>
                                        <value> is YAML-parsed (`true`/`42`/`[a,b]`/`{k: v}`)
   --json                               Envelope output as JSON
 
-cn config unset <path>                 Remove the value at <path> (idempotent)
+luuna-beacon config unset <path>                 Remove the value at <path> (idempotent)
   --json                               Envelope output as JSON
 ```
 
 ### Utility Commands
 
 ```
-cn stats                               Prompt statistics (active/draft/archived counts)
+luuna-beacon stats                               Prompt statistics (active/draft/archived counts)
 
-cn sync                                Stage and commit .canopy/ changes
+luuna-beacon sync                                Stage and commit .luuna/beacon/ changes
   --status                             Check for uncommitted changes without committing
 
-cn import <path>                       Import an existing .md file as a prompt
+luuna-beacon import <path>                       Import an existing .md file as a prompt
   --name <text>        (required)      Prompt name
   --split                              Auto-split into sections by ## headers
   --tag <tag>                          Add tag (repeatable)
@@ -567,36 +567,36 @@ Diff:
 
 ## Config Management
 
-`.canopy/config.yaml` is a small structured surface — `project`, `version`, and the nested `targets` map for named emit targets. Canopy publishes a JSON Schema describing the canonical shape so external UIs (warren V2's per-tool config editor) can render forms automatically and write back through per-knob CLI commands. The surface mirrors `sd config` and `ml config` so a single warren wire contract works across all three primitive CLIs.
+`.luuna/beacon/config.yaml` is a small structured surface — `project`, `version`, and the nested `targets` map for named emit targets. Luuna Beacon publishes a JSON Schema describing the canonical shape so external UIs (warren V2's per-tool config editor) can render forms automatically and write back through per-knob CLI commands. The surface mirrors `sd config` and `ml config` so a single warren wire contract works across all three primitive CLIs.
 
 ```bash
 # Emit the schema (warren reads this once, renders a form)
-cn config schema --json
+luuna-beacon config schema --json
 
 # Read the whole config or a specific dot-path
-cn config show
-cn config show --path targets.default.dir
+luuna-beacon config show
+luuna-beacon config show --path targets.default.dir
 
 # Write a value (YAML-parsed; validated against the schema before write)
-cn config set project newname
-cn config set targets.default.dir agents
-cn config set targets.commands.tags '[slash-command, alias]'
-cn config set targets.scratch '{dir: .scratch}'
+luuna-beacon config set project newname
+luuna-beacon config set targets.default.dir agents
+luuna-beacon config set targets.commands.tags '[slash-command, alias]'
+luuna-beacon config set targets.scratch '{dir: .scratch}'
 
 # Remove a value (idempotent on absent paths)
-cn config unset targets.scratch
+luuna-beacon config unset targets.scratch
 ```
 
 Writes hold the `config.yaml` advisory lock, write to `.tmp.{random}` and rename atomically over the destination, and validate the full post-write document against the schema before persisting — partial writes that would leave the file inconsistent are rejected and the `.tmp.*` file is cleaned up. The schema's `additionalProperties: false` posture rejects unknown top-level keys; AJV draft 2020-12 is advertised in `$schema`, but compile-time the URI is stripped so AJV runs in default draft-07 mode (matches the seeds implementation).
 
-The schema describes only the **canonical** shape (`project`, `version`, `targets: Record<name, EmitTarget>`). The legacy `emitDir`/`emitDirByTag` converter in `loadConfig` keeps reading old configs, but the first `cn config set` on a legacy project normalizes the file to the canonical shape — a one-way migration, documented as expected behavior.
+The schema describes only the **canonical** shape (`project`, `version`, `targets: Record<name, EmitTarget>`). The legacy `emitDir`/`emitDirByTag` converter in `loadConfig` keeps reading old configs, but the first `luuna-beacon config set` on a legacy project normalizes the file to the canonical shape — a one-way migration, documented as expected behavior.
 
 ### JSON Envelopes
 
 ```json
-{ "success": true, "command": "config show", "config": { "project": "canopy", "version": "1", "targets": {...} } }
-{ "success": true, "command": "config show", "path": "project", "value": "canopy" }
-{ "success": true, "command": "config set", "path": "project", "value": "canopy" }
+{ "success": true, "command": "config show", "config": { "project": "luuna-beacon", "version": "1", "targets": {...} } }
+{ "success": true, "command": "config show", "path": "project", "value": "luuna-beacon" }
+{ "success": true, "command": "config set", "path": "project", "value": "luuna-beacon" }
 { "success": true, "command": "config unset", "path": "targets.scratch", "removed": true }
 { "success": false, "command": "config set", "error": "Config validation failed:\n  project: must be string" }
 ```
@@ -608,7 +608,7 @@ Identical to seeds/mulch — proven in production with multi-agent concurrent ac
 ### Advisory File Locking
 
 ```
-Lock file:    .canopy/prompts.jsonl.lock
+Lock file:    .luuna/beacon/prompts.jsonl.lock
 Stale after:  30 seconds
 Retry:        50ms polling
 Timeout:      5 seconds
@@ -635,16 +635,16 @@ Version-only appends (updates) never delete old lines — they append a new line
 
 ### Dedup on Read
 
-After a `merge=union` git merge, `prompts.jsonl` may contain duplicate lines for the same prompt version. On read, canopy deduplicates by ID + version — if two lines have the same ID and version, last occurrence wins.
+After a `merge=union` git merge, `prompts.jsonl` may contain duplicate lines for the same prompt version. On read, luuna-beacon deduplicates by ID + version — if two lines have the same ID and version, last occurrence wins.
 
 For current state queries (show, list, render), only the highest version per ID is used.
 
 ## The Import Command
 
-Bridging existing `.md` files into canopy:
+Bridging existing `.md` files into luuna-beacon:
 
 ```bash
-cn import agents/builder.md --name builder --split --tag agent
+luuna-beacon import agents/builder.md --name builder --split --tag agent
 ```
 
 With `--split`, the importer parses markdown `## Heading` boundaries and creates one section per heading:
@@ -677,34 +677,34 @@ Without `--split`, the entire file becomes a single section named `body`.
 
 ### Prompt Source
 
-Overstory's overlay generator (`src/agents/overlay.ts`) currently reads raw `.md` files from the `agents/` directory. With canopy, two integration paths:
+Overstory's overlay generator (`src/agents/overlay.ts`) currently reads raw `.md` files from the `agents/` directory. With luuna-beacon, two integration paths:
 
-**Path 1 (zero coupling):** Use `cn emit --all --out-dir agents/` as a build step. Overstory reads `.md` files as before. Canopy is invisible to overstory.
+**Path 1 (zero coupling):** Use `luuna-beacon emit --all --out-dir agents/` as a build step. Overstory reads `.md` files as before. Luuna Beacon is invisible to overstory.
 
-**Path 2 (native integration):** Overstory wraps canopy via `Bun.spawn(["cn", ...])` with `--json` parsing, same as seeds/mulch:
+**Path 2 (native integration):** Overstory wraps luuna-beacon via `Bun.spawn(["luuna-beacon", ...])` with `--json` parsing, same as seeds/mulch:
 
-| Overstory operation | cn command |
+| Overstory operation | luuna-beacon command |
 |--------------------|------------|
-| Load agent definition | `cn render <name> --format md` |
-| Check prompt version | `cn show <name> --json` |
-| Validate before sling | `cn validate <name> --json` |
-| Record prompt version in session | read `version` from `cn show` output |
+| Load agent definition | `luuna-beacon render <name> --format md` |
+| Check prompt version | `luuna-beacon show <name> --json` |
+| Validate before sling | `luuna-beacon validate <name> --json` |
+| Record prompt version in session | read `version` from `luuna-beacon show` output |
 
 Path 1 is recommended for initial adoption. Path 2 adds value when you want session-level prompt version tracking.
 
 ### Agent-Facing Commands
 
-Agents don't interact with canopy directly. They receive rendered prompts via their CLAUDE.md overlay and agent definition `.md` files. Canopy is an authoring tool, not a runtime dependency.
+Agents don't interact with luuna-beacon directly. They receive rendered prompts via their CLAUDE.md overlay and agent definition `.md` files. Luuna Beacon is an authoring tool, not a runtime dependency.
 
 ### Mulch Integration
 
-Mulch expertise records often describe prompt conventions ("agent definitions should include four behavioral sections"). Canopy schemas can codify these conventions as enforceable rules rather than prose.
+Mulch expertise records often describe prompt conventions ("agent definitions should include four behavioral sections"). Luuna Beacon schemas can codify these conventions as enforceable rules rather than prose.
 
-In addition, prompts can declare which mulch domains and file globs a role depends on via the `mulch:` block (see "Mulch Metadata"). The declaration is metadata only — canopy emits it through the render envelope and consumers (e.g., warren, overstory) call `ml prime` themselves at run-spawn time. Canopy never shells out to `ml`.
+In addition, prompts can declare which mulch domains and file globs a role depends on via the `mulch:` block (see "Mulch Metadata"). The declaration is metadata only — luuna-beacon emits it through the render envelope and consumers (e.g., warren, overstory) call `ml prime` themselves at run-spawn time. Luuna Beacon never shells out to `ml`.
 
 ## Standalone Value (Outside Overstory)
 
-Canopy is useful for anyone managing prompts:
+Luuna Beacon is useful for anyone managing prompts:
 
 - **Chatbot developers** — version personas, validate required safety sections, compose base personality + domain specialization
 - **RAG pipeline builders** — manage system prompts across retrieval, synthesis, and formatting stages with shared constraints
@@ -712,20 +712,20 @@ Canopy is useful for anyone managing prompts:
 - **AI agent frameworks** — any multi-agent system with duplicated prompt content benefits from composition
 - **Solo developers** — version and diff prompt iterations, import existing `.md` files incrementally
 
-The `cn import --split` and `cn emit` commands make adoption zero-friction: import what you have, manage it in canopy, emit to whatever format your tools expect.
+The `luuna-beacon import --split` and `luuna-beacon emit` commands make adoption zero-friction: import what you have, manage it in luuna-beacon, emit to whatever format your tools expect.
 
-## What Canopy Does NOT Do
+## What Luuna Beacon Does NOT Do
 
 Explicitly out of scope (keep it minimal):
 
-- **No prompt execution.** Canopy manages prompts, it doesn't run them against an LLM. That's the consumer's job.
+- **No prompt execution.** Luuna Beacon manages prompts, it doesn't run them against an LLM. That's the consumer's job.
 - **No variable interpolation.** Sections are static markdown. Runtime templating (`{task_id}`, `{file_scope}`) is the consumer's responsibility.
-- **No A/B testing.** Canopy versions and diffs, but doesn't track which version "performed better." That needs execution data canopy doesn't have.
+- **No A/B testing.** Luuna Beacon versions and diffs, but doesn't track which version "performed better." That needs execution data luuna-beacon doesn't have.
 - **No daemon.** No background process, no socket, no PID files.
 - **No binary database.** JSONL only. No SQLite, no Dolt.
-- **No remote sync.** `cn sync` commits locally. `git push` handles the rest.
+- **No remote sync.** `luuna-beacon sync` commits locally. `git push` handles the rest.
 - **No custom merge driver.** `merge=union` handles everything. Dedup on read handles edge cases.
-- **No compact command (yet).** Version history grows the JSONL file. Ship `cn compact` when file bloat becomes a real problem (keeps only latest N versions per prompt).
+- **No compact command (yet).** Version history grows the JSONL file. Ship `luuna-beacon compact` when file bloat becomes a real problem (keeps only latest N versions per prompt).
 
 ## Tech Stack
 
@@ -733,7 +733,7 @@ Explicitly out of scope (keep it minimal):
 |---------|--------|-----------|
 | Runtime | Bun | Matches overstory/seeds/mulch, runs TS directly |
 | Language | TypeScript (strict) | Matches ecosystem |
-| Dependencies | `chalk`, `commander`, `ajv` | Minimal — ajv added in 0.2.5 for `cn config` schema validation |
+| Dependencies | `chalk`, `commander`, `ajv` | Minimal — ajv added in 0.2.5 for `luuna-beacon config` schema validation |
 | Config | YAML (minimal built-in parser) | Matches ecosystem convention |
 | Storage | JSONL | Git-native, diffable, mergeable |
 | Locking | Advisory file locks | Proven in mulch/seeds for multi-agent |
@@ -746,7 +746,7 @@ Explicitly out of scope (keep it minimal):
 ### Directory Structure
 
 ```
-canopy/
+luuna-beacon/
   package.json
   tsconfig.json
   biome.json
@@ -769,30 +769,30 @@ canopy/
     store.ts                  # JSONL read/write/lock/atomic
     id.ts                     # ID generation
     config.ts                 # YAML config load/save
-    config-schema.ts          # JSON Schema for .canopy/config.yaml (warren wire contract)
+    config-schema.ts          # JSON Schema for .luuna/beacon/config.yaml (warren wire contract)
     output.ts                 # JSON + human output helpers
     yaml.ts                   # Minimal YAML parser (flat key-value only)
     render.ts                 # Inheritance resolution + section composition
     validate.ts               # Schema validation engine
     commands/
-      init.ts                 # cn init
-      create.ts               # cn create
-      show.ts                 # cn show
-      list.ts                 # cn list
-      update.ts               # cn update
-      archive.ts              # cn archive
-      render.ts               # cn render
-      tree.ts                 # cn tree
-      history.ts              # cn history
-      diff.ts                 # cn diff
-      pin.ts                  # cn pin / cn unpin
-      emit.ts                 # cn emit
-      schema.ts               # cn schema create/show/list/rule
-      validate.ts             # cn validate
-      import.ts               # cn import
-      sync.ts                 # cn sync
-      stats.ts                # cn stats
-      config.ts               # cn config schema/show/set/unset
+      init.ts                 # luuna-beacon init
+      create.ts               # luuna-beacon create
+      show.ts                 # luuna-beacon show
+      list.ts                 # luuna-beacon list
+      update.ts               # luuna-beacon update
+      archive.ts              # luuna-beacon archive
+      render.ts               # luuna-beacon render
+      tree.ts                 # luuna-beacon tree
+      history.ts              # luuna-beacon history
+      diff.ts                 # luuna-beacon diff
+      pin.ts                  # luuna-beacon pin / luuna-beacon unpin
+      emit.ts                 # luuna-beacon emit
+      schema.ts               # luuna-beacon schema create/show/list/rule
+      validate.ts             # luuna-beacon validate
+      import.ts               # luuna-beacon import
+      sync.ts                 # luuna-beacon sync
+      stats.ts                # luuna-beacon stats
+      config.ts               # luuna-beacon config schema/show/set/unset
     render.test.ts            # Inheritance resolution tests
     validate.test.ts          # Schema validation tests
     store.test.ts             # Core data layer tests

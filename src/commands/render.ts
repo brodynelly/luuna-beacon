@@ -5,13 +5,14 @@ import { resolvePrompt } from "../render.ts";
 import { dedupById, readJsonl } from "../store.ts";
 import type { Prompt } from "../types.ts";
 import { ExitError } from "../types.ts";
+import { promptsFile } from "../paths.ts";
 
 export default async function renderCmd(args: string[], json: boolean): Promise<void> {
 	const cwd = process.cwd();
-	const promptsPath = join(cwd, ".canopy", "prompts.jsonl");
+	const promptsPath = promptsFile(cwd);
 
 	if (args.includes("--help") || args.includes("-h")) {
-		humanOut(`Usage: cn render <name>[@version] [options]
+		humanOut(`Usage: luuna-beacon render <name>[@version] [options]
 
 Options:
   --format md|json    Output format (default: md)
@@ -24,7 +25,7 @@ Options:
 		if (json) {
 			jsonOut({ success: false, command: "render", error: "Prompt name required" });
 		} else {
-			errorOut("Usage: cn render <name>[@version] [--format md|json]");
+			errorOut("Usage: luuna-beacon render <name>[@version] [--format md|json]");
 		}
 		throw new ExitError(1);
 	}

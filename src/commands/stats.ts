@@ -3,20 +3,21 @@ import type { Command } from "commander";
 import { c, humanOut, jsonOut } from "../output.ts";
 import { dedupById, dedupByIdLast, readJsonl } from "../store.ts";
 import type { Prompt, Schema } from "../types.ts";
+import { promptsFile, schemasFile } from "../paths.ts";
 
 export default async function stats(_args: string[], json: boolean): Promise<void> {
 	const cwd = process.cwd();
 
 	if (_args.includes("--help") || _args.includes("-h")) {
-		humanOut(`Usage: cn stats [options]
+		humanOut(`Usage: luuna-beacon stats [options]
 
 Options:
   --json    Output as JSON`);
 		return;
 	}
 
-	const promptsPath = join(cwd, ".canopy", "prompts.jsonl");
-	const schemasPath = join(cwd, ".canopy", "schemas.jsonl");
+	const promptsPath = promptsFile(cwd);
+	const schemasPath = schemasFile(cwd);
 
 	const allPromptRecords = await readJsonl<Prompt>(promptsPath);
 	const allSchemaRecords = await readJsonl<Schema>(schemasPath);
@@ -40,7 +41,7 @@ Options:
 			schemas: schemas.length,
 		});
 	} else {
-		humanOut(c.bold("Canopy Stats"));
+		humanOut(c.bold("Luuna Beacon Stats"));
 		humanOut("");
 		humanOut("Prompts:");
 		humanOut(`  ${c.green(String(active))} active`);

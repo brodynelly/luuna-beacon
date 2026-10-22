@@ -35,7 +35,7 @@ function captureOutput(fn: () => Promise<void>): Promise<{ stdout: string; stder
 
 function makePrompt(name: string, opts: Partial<Prompt> = {}): Prompt {
 	return {
-		id: `canopy-${name}`,
+		id: `beacon-${name}`,
 		name,
 		version: 1,
 		sections: [],
@@ -47,7 +47,7 @@ function makePrompt(name: string, opts: Partial<Prompt> = {}): Prompt {
 }
 
 async function seedPrompts(prompts: Prompt[]): Promise<void> {
-	const promptsPath = join(tmpDir, ".canopy", "prompts.jsonl");
+	const promptsPath = join(tmpDir, ".luuna", "beacon", "prompts.jsonl");
 	for (const p of prompts) {
 		await appendJsonl(promptsPath, p);
 	}
@@ -65,7 +65,7 @@ afterEach(() => {
 	if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true });
 });
 
-describe("cn tree", () => {
+describe("luuna-beacon tree", () => {
 	it("shows a single prompt with no parents or children", async () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);

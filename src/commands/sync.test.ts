@@ -41,10 +41,10 @@ function initGitRepo(dir: string): void {
 	git(["init"], dir);
 	git(["config", "user.email", "test@example.com"], dir);
 	git(["config", "user.name", "Test"], dir);
-	// Create .canopy/ dir so git tracks it
-	mkdirSync(join(dir, ".canopy"), { recursive: true });
-	writeFileSync(join(dir, ".canopy", "config.yaml"), "version: 1\n");
-	git(["add", ".canopy/"], dir);
+	// Create .luuna/beacon/ dir so git tracks it
+	mkdirSync(join(dir, ".luuna", "beacon"), { recursive: true });
+	writeFileSync(join(dir, ".luuna", "beacon", "config.yaml"), "version: 1\n");
+	git(["add", ".luuna/beacon/"], dir);
 	git(["commit", "-m", "initial"], dir);
 }
 
@@ -58,8 +58,8 @@ afterEach(() => {
 	}
 });
 
-describe("cn sync", () => {
-	it("reports nothing to commit when .canopy/ is clean", async () => {
+describe("luuna-beacon sync", () => {
+	it("reports nothing to commit when .luuna/beacon/ is clean", async () => {
 		initGitRepo(tmpDir);
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
@@ -76,8 +76,8 @@ describe("cn sync", () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
 		try {
-			// Add a new file to .canopy/
-			writeFileSync(join(tmpDir, ".canopy", "prompts.jsonl"), '{"id":"p1"}\n');
+			// Add a new file to .luuna/beacon/
+			writeFileSync(join(tmpDir, ".luuna", "beacon", "prompts.jsonl"), '{"id":"p1"}\n');
 
 			const { stdout } = await captureOutput(() => sync([], false));
 			expect(stdout).toContain("Committed");
@@ -86,7 +86,7 @@ describe("cn sync", () => {
 			// Verify it was committed
 			const logResult = Bun.spawnSync(["git", "log", "--oneline"], { cwd: tmpDir });
 			const log = logResult.stdout.toString();
-			expect(log).toContain("canopy: sync");
+			expect(log).toContain("luuna-beacon: sync");
 		} finally {
 			process.chdir(origCwd);
 		}
@@ -97,14 +97,14 @@ describe("cn sync", () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
 		try {
-			writeFileSync(join(tmpDir, ".canopy", "prompts.jsonl"), '{"id":"p1"}\n');
+			writeFileSync(join(tmpDir, ".luuna", "beacon", "prompts.jsonl"), '{"id":"p1"}\n');
 
 			await captureOutput(() => sync([], false));
 
 			const logResult = Bun.spawnSync(["git", "log", "--oneline"], { cwd: tmpDir });
 			const log = logResult.stdout.toString();
 			const today = new Date().toISOString().slice(0, 10);
-			expect(log).toContain(`canopy: sync ${today}`);
+			expect(log).toContain(`luuna-beacon: sync ${today}`);
 		} finally {
 			process.chdir(origCwd);
 		}
@@ -127,7 +127,7 @@ describe("cn sync", () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
 		try {
-			writeFileSync(join(tmpDir, ".canopy", "prompts.jsonl"), '{"id":"p1"}\n');
+			writeFileSync(join(tmpDir, ".luuna", "beacon", "prompts.jsonl"), '{"id":"p1"}\n');
 
 			const { stdout } = await captureOutput(() => sync(["--status"], false));
 			expect(stdout).toContain("uncommitted");
@@ -161,7 +161,7 @@ describe("cn sync", () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
 		try {
-			writeFileSync(join(tmpDir, ".canopy", "prompts.jsonl"), '{"id":"p1"}\n');
+			writeFileSync(join(tmpDir, ".luuna", "beacon", "prompts.jsonl"), '{"id":"p1"}\n');
 
 			const { stdout } = await captureOutput(() => sync(["--json"], true));
 			const parsed = JSON.parse(stdout.trim());
@@ -169,7 +169,7 @@ describe("cn sync", () => {
 			expect(parsed.command).toBe("sync");
 			expect(parsed.committed).toBe(true);
 			expect(parsed.files.length).toBeGreaterThan(0);
-			expect(parsed.message).toContain("canopy: sync");
+			expect(parsed.message).toContain("luuna-beacon: sync");
 		} finally {
 			process.chdir(origCwd);
 		}
@@ -180,7 +180,7 @@ describe("cn sync", () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
 		try {
-			writeFileSync(join(tmpDir, ".canopy", "prompts.jsonl"), '{"id":"p1"}\n');
+			writeFileSync(join(tmpDir, ".luuna", "beacon", "prompts.jsonl"), '{"id":"p1"}\n');
 
 			const { stdout } = await captureOutput(() => sync(["--status", "--json"], true));
 			const parsed = JSON.parse(stdout.trim());
@@ -194,7 +194,7 @@ describe("cn sync", () => {
 
 	it("throws ExitError when not in a git repo", async () => {
 		// Use a directory outside of any git repo (in system tmp)
-		const noGitDir = `/tmp/cn-test-no-git-${Date.now()}`;
+		const noGitDir = `/tmp/lb-test-no-git-${Date.now()}`;
 		mkdirSync(noGitDir, { recursive: true });
 		const origCwd = process.cwd();
 		process.chdir(noGitDir);

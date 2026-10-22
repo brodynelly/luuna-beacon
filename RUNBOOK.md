@@ -1,8 +1,8 @@
-# Canopy Operations Runbook
+# Luuna Beacon Operations Runbook
 
-This runbook covers canopy's operational procedures only:
+This runbook covers luuna-beacon's operational procedures only:
 
-1. Cutting a release of `@os-eco/canopy-cli` to npm.
+1. Cutting a release of `@luuna/beacon-cli` to npm.
 2. Triaging a failed publish.
 3. Rolling back a bad release.
 
@@ -14,7 +14,7 @@ record, see `SPEC.md`. For architecture orientation, see
 
 - `bun --version` ≥ the version in `package.json` `engines.bun` (≥ 1.0).
 - `gh auth status` → authenticated, with `repo` + `workflow` scopes.
-- `git remote -v` shows the canonical origin (`github.com/jayminwest/canopy`).
+- `git remote -v` shows the canonical origin (`github.com/brodynelly/luuna-beacon`).
 - For npm publish: `npm whoami` → `jayminwest`; 2FA enabled on the
   account.
 - Local working tree on `main`, fully up to date, `git status` clean.
@@ -31,20 +31,20 @@ Cut releases from `main` only. Never tag a feature branch.
 
 Follow [SemVer](https://semver.org). Pick:
 
-- **MAJOR** for any backward-incompatible change to the `cn` public CLI
+- **MAJOR** for any backward-incompatible change to the `luuna-beacon` public CLI
   surface (subcommand removed, flag renamed, JSONL schema breaking
   change).
 - **MINOR** for new features or non-breaking additions (new subcommand,
   new optional flag, new emit target type).
 - **PATCH** for bug fixes, doc-only changes, internal refactors,
-  dependency bumps that don't change canopy's surface.
+  dependency bumps that don't change luuna-beacon's surface.
 
-While canopy is pre-1.0 (current `package.json` "version" starts with
+While luuna-beacon is pre-1.0 (current `package.json` "version" starts with
 `0.`), breaking changes go in MINOR; additive changes go in PATCH.
 
 ### 1.2 Update the version in every source of truth
 
-Canopy's version lives in **two** places, kept in sync manually. The
+Luuna Beacon's version lives in **two** places, kept in sync manually. The
 publish workflow asserts they agree before pushing to npm:
 
 - `package.json` — `"version"` field.
@@ -67,7 +67,7 @@ verbatim and uses it as the GitHub release body, so format matters.
 ## [X.Y.Z] — YYYY-MM-DD
 
 ### Added
-- Short description (canopy-XXXX).
+- Short description (beacon-XXXX).
 
 ### Changed
 - Short description.
@@ -78,7 +78,7 @@ verbatim and uses it as the GitHub release body, so format matters.
 
 Group changes under standard Keep-a-Changelog headings (Added /
 Changed / Fixed / Deprecated / Removed / Security). Link each entry to
-its `canopy-XXXX` tracker id, `mx-XXXX` cross-repo id, `#NNN` GitHub
+its `beacon-XXXX` tracker id, `mx-XXXX` cross-repo id, `#NNN` GitHub
 issue, or a URL.
 
 ### 1.4 Final gate check
@@ -100,7 +100,7 @@ before continuing. Once additional gates land (`check:size`,
 
 ```bash
 git add package.json src/index.ts CHANGELOG.md
-git commit -m "release: canopy X.Y.Z"
+git commit -m "release: luuna-beacon X.Y.Z"
 git push origin main
 ```
 
@@ -108,10 +108,10 @@ Pushing triggers `.github/workflows/publish.yml`, which:
 
 1. Re-runs `bun run lint`, `bun run typecheck`, and `bun test` in CI.
 2. Compares `package.json` `"version"` against the npm registry's
-   current version of `@os-eco/canopy-cli`. If they match, the
+   current version of `@luuna/beacon-cli`. If they match, the
    workflow is a no-op (`publish=false`); otherwise it proceeds.
 3. Asserts `package.json` and `src/index.ts` agree on `X.Y.Z`.
-4. Publishes `@os-eco/canopy-cli@X.Y.Z` to npm with `--access public`.
+4. Publishes `@luuna/beacon-cli@X.Y.Z` to npm with `--access public`.
 5. Tags `vX.Y.Z` and pushes the tag to origin.
 6. Extracts the matching `CHANGELOG.md` section with an awk script and
    uses it as the GitHub release body. If the section is empty, the
@@ -131,16 +131,16 @@ After the workflow finishes:
 git pull --tags
 git tag --list | tail -5                          # confirm vX.Y.Z present
 gh release view vX.Y.Z                            # confirm release page renders
-npm view @os-eco/canopy-cli version               # confirm published version
+npm view @luuna/beacon-cli version               # confirm published version
 ```
 
 Smoke-install in a clean dir:
 
 ```bash
-mkdir /tmp/canopy-smoke && cd /tmp/canopy-smoke
-bun install @os-eco/canopy-cli
-bunx cn --version    # should print X.Y.Z
-bunx cn --help       # should list all subcommands
+mkdir /tmp/beacon-smoke && cd /tmp/beacon-smoke
+bun install @luuna/beacon-cli
+bunx lb --version    # should print X.Y.Z
+bunx lb --help       # should list all subcommands
 ```
 
 ## 2. Triage of a failed publish
@@ -199,7 +199,7 @@ versa), **do not unpublish**. Recover the missing half manually:
   git push origin vX.Y.Z
   ```
 
-Record the deviation in a `canopy-XXXX` tracker so future operators
+Record the deviation in a `beacon-XXXX` tracker so future operators
 know the half-step happened.
 
 ## 3. Rollback
@@ -211,7 +211,7 @@ Rollback means **publishing a corrective version**.
 
 - **Critical** (data loss, security regression, total CLI breakage):
   cut a new patch release reverting the change in under 30 minutes.
-- **High** (regression on common path: `cn emit` breaks, `cn render`
+- **High** (regression on common path: `luuna-beacon emit` breaks, `luuna-beacon render`
   silently corrupts): cut a patch within the day.
 - **Medium / Low**: fix forward on the next planned release.
 
@@ -237,15 +237,15 @@ Follow §1.1–§1.5. In `CHANGELOG.md`, note the rollback explicitly:
 
 ### Fixed
 - Reverted <one-line bad-commit summary> from X.Y.Z which caused
-  <symptom>. Tracking in canopy-XXXX / #NNN.
+  <symptom>. Tracking in beacon-XXXX / #NNN.
 ```
 
 ### 3.4 Deprecate the bad version on npm
 
-If `@os-eco/canopy-cli@X.Y.Z` is dangerous to install:
+If `@luuna/beacon-cli@X.Y.Z` is dangerous to install:
 
 ```bash
-npm deprecate @os-eco/canopy-cli@X.Y.Z \
+npm deprecate @luuna/beacon-cli@X.Y.Z \
   "Critical bug; install X.Y.(Z+1) or later. See CHANGELOG.md."
 ```
 
@@ -256,7 +256,7 @@ reproducible installs); it surfaces a warning at install time.
 
 - Edit the GitHub release notes for `vX.Y.Z` with a banner at the top:
   `> ⚠️ This release contains a regression. Use vX.Y.(Z+1) or later.`
-- File / update `canopy-XXXX` with root cause + remediation links.
+- File / update `beacon-XXXX` with root cause + remediation links.
 - If a downstream consumer (overstory, warren, sapling) pinned the bad
   version, open an issue against that repo recommending the upgrade.
 
@@ -275,8 +275,8 @@ gh run view <run-id> --log-failed
 gh run rerun <run-id> --failed
 
 # Inspect what npm has published
-npm view @os-eco/canopy-cli versions --json
-npm view @os-eco/canopy-cli dist-tags
+npm view @luuna/beacon-cli versions --json
+npm view @luuna/beacon-cli dist-tags
 ```
 
 ## Appendix — Pre-publish checklist (copy-paste into release PR body)
@@ -286,6 +286,6 @@ npm view @os-eco/canopy-cli dist-tags
 - [ ] `bun run lint && bun run typecheck && bun test` exit 0.
 - [ ] `bun run check:agents` and `bun run gen:docs:check` exit 0.
 - [ ] `gh run watch` confirmed `publish.yml` succeeded.
-- [ ] `npm view @os-eco/canopy-cli version` reports `X.Y.Z`.
+- [ ] `npm view @luuna/beacon-cli version` reports `X.Y.Z`.
 - [ ] Smoke install in a clean dir succeeds.
 - [ ] GitHub release page renders the changelog section correctly.

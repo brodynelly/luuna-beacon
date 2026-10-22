@@ -3,7 +3,7 @@
  * Automated CLI doc generator.
  *
  * Walks the Commander command tree registered by `src/index.ts` and
- * emits a Markdown reference of every `cn` subcommand to
+ * emits a Markdown reference of every `luuna-beacon` subcommand to
  * `docs/cli-reference.md`. The handler module is the canonical CLI
  * surface, so deriving the docs from it avoids drift between a
  * hand-written reference and the real binary.

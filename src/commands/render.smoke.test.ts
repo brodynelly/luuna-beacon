@@ -4,9 +4,9 @@ import { join } from "node:path";
 import { appendJsonl } from "../store.ts";
 import type { Prompt } from "../types.ts";
 
-// End-to-end smoke test for warren-style consumption of `cn render --json`.
+// End-to-end smoke test for warren-style consumption of `luuna-beacon render --json`.
 // Unlike render.test.ts (which calls renderCmd directly), this spawns the
-// actual cn CLI as a subprocess — the same way warren consumes canopy at
+// actual luuna-beacon CLI as a subprocess — the same way warren consumes beacon at
 // run-spawn time — and asserts the envelope contract plus the no-shell-out
 // invariant (acceptance criterion 7 of pl-003f).
 
@@ -25,7 +25,7 @@ function makePrompt(overrides: Partial<Prompt> & { id: string; name: string }): 
 }
 
 async function seed(prompt: Prompt): Promise<void> {
-	await appendJsonl(join(tmpDir, ".canopy", "prompts.jsonl"), prompt);
+	await appendJsonl(join(tmpDir, ".luuna", "beacon", "prompts.jsonl"), prompt);
 }
 
 interface CnResult {
@@ -57,15 +57,15 @@ async function runCn(args: string[], pathPrefix?: string): Promise<CnResult> {
 }
 
 beforeEach(() => {
-	mkdirSync(join(tmpDir, ".canopy"), { recursive: true });
-	writeFileSync(join(tmpDir, ".canopy", "config.yaml"), "version: 1\n");
+	mkdirSync(join(tmpDir, ".luuna", "beacon"), { recursive: true });
+	writeFileSync(join(tmpDir, ".luuna", "beacon", "config.yaml"), "version: 1\n");
 });
 
 afterEach(() => {
 	if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true });
 });
 
-describe("warren-style smoke: cn render --json envelope", () => {
+describe("warren-style smoke: luuna-beacon render --json envelope", () => {
 	it("returns a stable envelope with mulch field when role declares mulch", async () => {
 		await seed(
 			makePrompt({
@@ -73,7 +73,7 @@ describe("warren-style smoke: cn render --json envelope", () => {
 				name: "warren-builder",
 				sections: [{ name: "role", body: "Warren builder agent." }],
 				mulch: {
-					prime: { domains: ["canopy", "warren"], files: ["src/**"] },
+					prime: { domains: ["beacon", "warren"], files: ["src/**"] },
 					budget: 8000,
 					on_empty: "warn",
 				},
@@ -92,7 +92,7 @@ describe("warren-style smoke: cn render --json envelope", () => {
 		expect(envelope.resolvedFrom).toEqual(["warren-builder"]);
 		expect(envelope.frontmatter).toEqual({});
 		expect(envelope.mulch).toEqual({
-			prime: { domains: ["canopy", "warren"], files: ["src/**"] },
+			prime: { domains: ["beacon", "warren"], files: ["src/**"] },
 			budget: 8000,
 			on_empty: "warn",
 		});
@@ -103,7 +103,7 @@ describe("warren-style smoke: cn render --json envelope", () => {
 		const domains = envelope.mulch.prime.domains as string[];
 		const files = envelope.mulch.prime.files as string[];
 		const primeArgs = ["ml", "prime", ...domains, "--files", ...files];
-		expect(primeArgs).toEqual(["ml", "prime", "canopy", "warren", "--files", "src/**"]);
+		expect(primeArgs).toEqual(["ml", "prime", "beacon", "warren", "--files", "src/**"]);
 	});
 
 	it("omits mulch entirely when no role in chain declares one", async () => {
@@ -129,7 +129,7 @@ describe("warren-style smoke: cn render --json envelope", () => {
 				id: "p-0001",
 				name: "grand",
 				sections: [{ name: "role", body: "Grand role." }],
-				mulch: { prime: { domains: ["canopy"] }, budget: 1000, on_empty: "error" },
+				mulch: { prime: { domains: ["beacon"] }, budget: 1000, on_empty: "error" },
 			}),
 		);
 		await seed(
@@ -159,7 +159,7 @@ describe("warren-style smoke: cn render --json envelope", () => {
 		const envelope = JSON.parse(stdout.trim());
 		expect(envelope.resolvedFrom).toEqual(["grand", "parent", "child"]);
 		expect(envelope.mulch).toEqual({
-			prime: { domains: ["canopy", "warren"], files: ["src/**"] },
+			prime: { domains: ["beacon", "warren"], files: ["src/**"] },
 			budget: 2000,
 			on_empty: "skip",
 		});
@@ -197,12 +197,12 @@ describe("warren-style smoke: cn render --json envelope", () => {
 				id: "p-0001",
 				name: "warren-builder",
 				sections: [{ name: "role", body: "Warren builder." }],
-				mulch: { prime: { domains: ["canopy"] }, budget: 5000, on_empty: "warn" },
+				mulch: { prime: { domains: ["beacon"] }, budget: 5000, on_empty: "warn" },
 			}),
 		);
 
 		// Plant an `ml` shim earlier in PATH that records every invocation
-		// to a marker file. If `cn render` were to shell out to mulch, the
+		// to a marker file. If `luuna-beacon render` were to shell out to mulch, the
 		// marker would appear.
 		const traceDir = join(tmpDir, ".trace");
 		mkdirSync(traceDir, { recursive: true });
@@ -218,7 +218,7 @@ describe("warren-style smoke: cn render --json envelope", () => {
 		// The render still succeeds and surfaces the resolved mulch unchanged.
 		const envelope = JSON.parse(stdout.trim());
 		expect(envelope.mulch).toEqual({
-			prime: { domains: ["canopy"] },
+			prime: { domains: ["beacon"] },
 			budget: 5000,
 			on_empty: "warn",
 		});

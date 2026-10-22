@@ -1,4 +1,5 @@
 import type { Command } from "commander";
+import { beaconDir } from "../paths.ts";
 import { c, errorOut, fmt, humanOut, jsonOut } from "../output.ts";
 import { ExitError } from "../types.ts";
 
@@ -6,7 +7,7 @@ export default async function sync(args: string[], json: boolean): Promise<void>
 	const cwd = process.cwd();
 
 	if (args.includes("--help") || args.includes("-h")) {
-		humanOut(`Usage: cn sync [options]
+		humanOut(`Usage: luuna-beacon sync [options]
 
 Options:
   --status    Check sync status without committing
@@ -14,10 +15,11 @@ Options:
 		return;
 	}
 
+	beaconDir(cwd); // migrate a legacy layout before touching git
 	const statusOnly = args.includes("--status");
 
-	// Check git status of .canopy/
-	const statusResult = Bun.spawnSync(["git", "status", "--porcelain", ".canopy/"], { cwd });
+	// Check git status of .luuna/beacon/
+	const statusResult = Bun.spawnSync(["git", "status", "--porcelain", ".luuna/beacon/"], { cwd });
 
 	if (statusResult.exitCode !== 0) {
 		const stderr = statusResult.stderr.toString();
@@ -44,7 +46,7 @@ Options:
 			});
 		} else {
 			if (changedFiles.length === 0) {
-				humanOut(fmt.success(".canopy/ is clean (no uncommitted changes)"));
+				humanOut(fmt.success(".luuna/beacon/ is clean (no uncommitted changes)"));
 			} else {
 				humanOut(fmt.warning(`${changedFiles.length} uncommitted file(s)`));
 				for (const f of changedFiles) {
@@ -59,13 +61,13 @@ Options:
 		if (json) {
 			jsonOut({ success: true, command: "sync", committed: false, message: "Nothing to commit" });
 		} else {
-			humanOut(c.dim("Nothing to commit in .canopy/"));
+			humanOut(c.dim("Nothing to commit in .luuna/beacon/"));
 		}
 		return;
 	}
 
-	// Stage .canopy/ changes
-	const addResult = Bun.spawnSync(["git", "add", ".canopy/"], { cwd });
+	// Stage .luuna/beacon/ changes
+	const addResult = Bun.spawnSync(["git", "add", ".luuna/beacon/"], { cwd });
 	if (addResult.exitCode !== 0) {
 		const err = addResult.stderr.toString();
 		if (json) {
@@ -77,7 +79,7 @@ Options:
 	}
 
 	// Commit
-	const msg = `canopy: sync ${new Date().toISOString().slice(0, 10)}`;
+	const msg = `luuna-beacon: sync ${new Date().toISOString().slice(0, 10)}`;
 	const commitResult = Bun.spawnSync(["git", "commit", "-m", msg], { cwd });
 
 	if (commitResult.exitCode !== 0) {
@@ -100,7 +102,7 @@ Options:
 export function registerSyncCommand(program: Command): void {
 	program
 		.command("sync")
-		.description("Stage and commit .canopy/ changes")
+		.description("Stage and commit .luuna/beacon/ changes")
 		.option("--status", "Check sync status without committing")
 		.action(async (options: { status?: boolean }) => {
 			const json: boolean = program.opts().json ?? false;

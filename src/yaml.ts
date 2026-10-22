@@ -10,7 +10,7 @@ export interface YamlMap {
 export type YamlValue = string | string[] | YamlMap;
 
 // Broader scalar/flow value type for parseScalarOrFlow: covers the values a
-// user can pass on the command line (cn config set <path> <value>). Kept
+// user can pass on the command line (luuna-beacon config set <path> <value>). Kept
 // alongside YamlMap/YamlValue rather than replacing them so existing
 // parseYaml/serializeYaml callers (config.yaml round-trips) remain unchanged.
 export type YamlScalar =
@@ -216,7 +216,7 @@ export function serializeYaml(obj: YamlMap): string {
 	return `${lines.join("\n")}\n`;
 }
 
-// Parse a single scalar or flow-style value. Used by `cn config set` to turn a
+// Parse a single scalar or flow-style value. Used by `luuna-beacon config set` to turn a
 // CLI argument into a typed JSON value before schema-validating the write.
 // Supports: quoted strings, booleans, null/~, integers, floats, flow sequences
 // [a, b, c], and flow mappings { k: v, k2: v2 }. Bare strings pass through.

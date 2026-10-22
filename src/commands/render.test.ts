@@ -33,7 +33,7 @@ function captureOutput(fn: () => Promise<void>): Promise<{ stdout: string; stder
 }
 
 async function seedPrompt(prompt: Prompt): Promise<void> {
-	const promptsPath = join(tmpDir, ".canopy", "prompts.jsonl");
+	const promptsPath = join(tmpDir, ".luuna", "beacon", "prompts.jsonl");
 	await appendJsonl(promptsPath, prompt);
 }
 
@@ -60,7 +60,7 @@ afterEach(() => {
 	if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true });
 });
 
-describe("cn render --json envelope", () => {
+describe("luuna-beacon render --json envelope", () => {
 	it("surfaces resolved mulch as a top-level field when declared", async () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
@@ -71,7 +71,7 @@ describe("cn render --json envelope", () => {
 					name: "role-with-mulch",
 					sections: [{ name: "role", body: "You are an agent." }],
 					mulch: {
-						prime: { domains: ["canopy"], files: ["src/render.ts"] },
+						prime: { domains: ["beacon"], files: ["src/render.ts"] },
 						budget: 5000,
 						on_empty: "warn",
 					},
@@ -82,7 +82,7 @@ describe("cn render --json envelope", () => {
 			const parsed = JSON.parse(stdout.trim());
 			expect(parsed.success).toBe(true);
 			expect(parsed.mulch).toEqual({
-				prime: { domains: ["canopy"], files: ["src/render.ts"] },
+				prime: { domains: ["beacon"], files: ["src/render.ts"] },
 				budget: 5000,
 				on_empty: "warn",
 			});
@@ -155,7 +155,7 @@ describe("cn render --json envelope", () => {
 					id: "p-0001",
 					name: "role-with-mulch",
 					sections: [{ name: "role", body: "You are an agent." }],
-					mulch: { prime: { domains: ["canopy"] } },
+					mulch: { prime: { domains: ["beacon"] } },
 				}),
 			);
 
@@ -163,7 +163,7 @@ describe("cn render --json envelope", () => {
 				renderCmd(["role-with-mulch", "--format", "json"], false),
 			);
 			const parsed = JSON.parse(stdout.trim());
-			expect(parsed.mulch).toEqual({ prime: { domains: ["canopy"] } });
+			expect(parsed.mulch).toEqual({ prime: { domains: ["beacon"] } });
 			expect(parsed.success).toBeUndefined();
 		} finally {
 			process.chdir(origCwd);

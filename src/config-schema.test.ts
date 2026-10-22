@@ -4,12 +4,12 @@ import { configSchema } from "./config-schema.ts";
 describe("configSchema", () => {
 	it("emits valid JSON Schema with the expected top-level shape", () => {
 		const schema = configSchema();
-		expect(schema.$id).toBe("https://github.com/jayminwest/canopy/config.schema.json");
+		expect(schema.$id).toBe("https://github.com/brodynelly/luuna-beacon/config.schema.json");
 		expect(schema.$schema).toBe("https://json-schema.org/draft/2020-12/schema");
 		expect(schema.type).toBe("object");
 		expect(schema.required).toEqual(["project", "version"]);
 		expect(schema.additionalProperties).toBe(false);
-		expect(schema.title).toBe("Canopy project config");
+		expect(schema.title).toBe("Luuna Beacon project config");
 
 		const props = schema.properties as Record<string, unknown>;
 		expect(Object.keys(props).sort()).toEqual(["project", "targets", "version"].sort());

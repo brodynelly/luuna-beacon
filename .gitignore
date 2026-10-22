@@ -2,7 +2,7 @@
 node_modules/
 *.lock
 !bun.lock
-.canopy/*.lock
+.luuna/beacon/*.lock
 bun.lockb
 .bun/
 

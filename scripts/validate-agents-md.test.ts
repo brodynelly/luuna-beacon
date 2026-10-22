@@ -13,7 +13,7 @@ import {
 const REPO_ROOT = resolve(import.meta.dir, "..");
 
 function makeFixture(): { root: string; cleanup: () => void } {
-	const root = mkdtempSync(join(tmpdir(), "canopy-validate-agents-md-"));
+	const root = mkdtempSync(join(tmpdir(), "beacon-validate-agents-md-"));
 	const cleanup = () => rmSync(root, { recursive: true, force: true });
 	return { root, cleanup };
 }
@@ -67,13 +67,13 @@ describe("extraction helpers", () => {
 
 	test("extractBacktickedPaths skips non-path tokens", () => {
 		const md =
-			"see `src/index.ts` and `package.json`, scoped pkg `@os-eco/canopy-cli`, " +
+			"see `src/index.ts` and `package.json`, scoped pkg `@luuna/beacon-cli`, " +
 			"placeholder `src/runs/...`, URL `https://example.com/foo.md`, " +
 			"bare ext `.ts`, glob `src/**/*.ts`, code `foo()`";
 		const paths = extractBacktickedPaths(md);
 		expect(paths).toContain("src/index.ts");
 		expect(paths).toContain("package.json");
-		expect(paths).not.toContain("@os-eco/canopy-cli");
+		expect(paths).not.toContain("@luuna/beacon-cli");
 		expect(paths.some((p) => p.endsWith("..."))).toBe(false);
 		expect(paths.some((p) => p.startsWith("http"))).toBe(false);
 		expect(paths).not.toContain(".ts");
@@ -175,8 +175,8 @@ describe("validate — synthetic violation", () => {
 	});
 });
 
-describe("validate — canopy AGENTS.md", () => {
-	test("passes against the canopy repo's own AGENTS.md", () => {
+describe("validate — beacon AGENTS.md", () => {
+	test("passes against the beacon repo's own AGENTS.md", () => {
 		const result = validate({ repoRoot: REPO_ROOT });
 		expect(result.failures).toEqual([]);
 	});

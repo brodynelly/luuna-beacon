@@ -3,7 +3,7 @@
  * AGENTS.md validator (L5 toolkit port).
  *
  * Static-checks `AGENTS.md` (and any other markdown doc supplied via
- * `--target`) against canopy's `package.json` + working tree:
+ * `--target`) against luuna-beacon's `package.json` + working tree:
  *
  *   - Every `bun run <NAME>` token inside a fenced bash/sh/shell block
  *     must reference a script defined in `package.json` scripts.

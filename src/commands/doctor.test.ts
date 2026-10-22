@@ -52,8 +52,8 @@ afterEach(() => {
 	process.exitCode = 0;
 });
 
-describe("cn doctor", () => {
-	it("all checks pass on a valid .canopy/ directory", async () => {
+describe("luuna-beacon doctor", () => {
+	it("all checks pass on a valid .luuna/beacon/ directory", async () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
 		try {
@@ -69,7 +69,7 @@ describe("cn doctor", () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
 		try {
-			rmSync(join(tmpDir, ".canopy", "config.yaml"));
+			rmSync(join(tmpDir, ".luuna", "beacon", "config.yaml"));
 			const { stdout } = await captureOutput(() => run(false, true, false));
 			expect(stdout).toContain("config.yaml is missing");
 		} finally {
@@ -81,10 +81,10 @@ describe("cn doctor", () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
 		try {
-			const promptsPath = join(tmpDir, ".canopy", "prompts.jsonl");
+			const promptsPath = join(tmpDir, ".luuna", "beacon", "prompts.jsonl");
 			await Bun.write(
 				promptsPath,
-				'{"id":"canopy-0001","name":"test","version":1,"sections":[],"status":"active","createdAt":"2024-01-01","updatedAt":"2024-01-01"}\nBAD LINE\n',
+				'{"id":"beacon-0001","name":"test","version":1,"sections":[],"status":"active","createdAt":"2024-01-01","updatedAt":"2024-01-01"}\nBAD LINE\n',
 			);
 			const { stdout } = await captureOutput(() => run(false, true, false));
 			expect(stdout).toContain("malformed line");
@@ -97,7 +97,7 @@ describe("cn doctor", () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
 		try {
-			const lockPath = join(tmpDir, ".canopy", "prompts.jsonl.lock");
+			const lockPath = join(tmpDir, ".luuna", "beacon", "prompts.jsonl.lock");
 			const fd = openSync(lockPath, constants.O_CREAT | constants.O_WRONLY);
 			closeSync(fd);
 			// Make it appear old (60 seconds ago)
@@ -157,7 +157,7 @@ describe("cn doctor", () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
 		try {
-			const schemasPath = join(tmpDir, ".canopy", "schemas.jsonl");
+			const schemasPath = join(tmpDir, ".luuna", "beacon", "schemas.jsonl");
 			await Bun.write(schemasPath, "NOT JSON\n");
 			const { stdout } = await captureOutput(() => run(false, true, false));
 			expect(stdout).toContain("malformed line");
@@ -171,9 +171,9 @@ describe("cn doctor", () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
 		try {
-			const promptsPath = join(tmpDir, ".canopy", "prompts.jsonl");
+			const promptsPath = join(tmpDir, ".luuna", "beacon", "prompts.jsonl");
 			const record = {
-				id: "canopy-0001",
+				id: "beacon-0001",
 				name: "with-bad-mulch",
 				version: 1,
 				sections: [],
@@ -197,9 +197,9 @@ describe("cn doctor", () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
 		try {
-			const promptsPath = join(tmpDir, ".canopy", "prompts.jsonl");
+			const promptsPath = join(tmpDir, ".luuna", "beacon", "prompts.jsonl");
 			const record = {
-				id: "canopy-0001",
+				id: "beacon-0001",
 				name: "with-good-mulch",
 				version: 1,
 				sections: [],
@@ -222,7 +222,7 @@ describe("cn doctor", () => {
 		}
 	});
 
-	it("mulch-domains skips with pass when no .mulch/mulch.config.yaml is present", async () => {
+	it("mulch-domains skips with pass when no .luuna/atlas/config.yaml is present", async () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
 		try {
@@ -238,18 +238,18 @@ describe("cn doctor", () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
 		try {
-			mkdirSync(join(tmpDir, ".mulch"), { recursive: true });
+			mkdirSync(join(tmpDir, ".luuna", "atlas"), { recursive: true });
 			writeFileSync(
-				join(tmpDir, ".mulch", "mulch.config.yaml"),
-				"version: '1'\ndomains:\n  - canopy\n  - cicd\n",
+				join(tmpDir, ".luuna", "atlas", "config.yaml"),
+				"version: '1'\ndomains:\n  - beacon\n  - cicd\n",
 			);
-			const promptsPath = join(tmpDir, ".canopy", "prompts.jsonl");
+			const promptsPath = join(tmpDir, ".luuna", "beacon", "prompts.jsonl");
 			const record = {
-				id: "canopy-0001",
+				id: "beacon-0001",
 				name: "with-typo",
 				version: 1,
 				sections: [],
-				mulch: { prime: { domains: ["canopy", "warrn"] } },
+				mulch: { prime: { domains: ["beacon", "warrn"] } },
 				status: "active",
 				createdAt: "2024-01-01",
 				updatedAt: "2024-01-01",
@@ -259,7 +259,7 @@ describe("cn doctor", () => {
 			expect(stdout).toContain("mulch-domains");
 			expect(stdout).toContain("unknown domain");
 			expect(stdout).toContain("warrn");
-			expect(stdout).toContain(".mulch/mulch.config.yaml");
+			expect(stdout).toContain(".luuna/atlas/config.yaml");
 			// warn must not flip the run to fail
 			expect(process.exitCode).not.toBe(1);
 		} finally {
@@ -271,18 +271,18 @@ describe("cn doctor", () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
 		try {
-			mkdirSync(join(tmpDir, ".mulch"), { recursive: true });
+			mkdirSync(join(tmpDir, ".luuna", "atlas"), { recursive: true });
 			writeFileSync(
-				join(tmpDir, ".mulch", "mulch.config.yaml"),
-				"version: '1'\ndomains:\n  - canopy\n  - cicd\n",
+				join(tmpDir, ".luuna", "atlas", "config.yaml"),
+				"version: '1'\ndomains:\n  - beacon\n  - cicd\n",
 			);
-			const promptsPath = join(tmpDir, ".canopy", "prompts.jsonl");
+			const promptsPath = join(tmpDir, ".luuna", "beacon", "prompts.jsonl");
 			const record = {
-				id: "canopy-0001",
+				id: "beacon-0001",
 				name: "with-known-domains",
 				version: 1,
 				sections: [],
-				mulch: { prime: { domains: ["canopy", "cicd"] } },
+				mulch: { prime: { domains: ["beacon", "cicd"] } },
 				status: "active",
 				createdAt: "2024-01-01",
 				updatedAt: "2024-01-01",
@@ -300,9 +300,9 @@ describe("cn doctor", () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
 		try {
-			const promptsPath = join(tmpDir, ".canopy", "prompts.jsonl");
+			const promptsPath = join(tmpDir, ".luuna", "beacon", "prompts.jsonl");
 			const record = {
-				id: "canopy-0001",
+				id: "beacon-0001",
 				name: "child",
 				version: 1,
 				sections: [],

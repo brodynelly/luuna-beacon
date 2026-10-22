@@ -1,15 +1,16 @@
 import { join } from "node:path";
 import type { Config, EmitTarget } from "./types.ts";
 import { parseYaml, serializeYaml, type YamlMap } from "./yaml.ts";
+import { configFile } from "./paths.ts";
 
 export async function loadConfig(dir: string): Promise<Config> {
-	const configPath = join(dir, ".canopy", "config.yaml");
+	const configPath = configFile(dir);
 
 	try {
 		const text = await Bun.file(configPath).text();
 		const parsed = parseYaml(text);
 
-		const project = typeof parsed.project === "string" ? parsed.project : "canopy";
+		const project = typeof parsed.project === "string" ? parsed.project : "luuna-beacon";
 		const version = typeof parsed.version === "string" ? parsed.version : "1";
 
 		const config: Config = { project, version };
@@ -79,14 +80,14 @@ export async function loadConfig(dir: string): Promise<Config> {
 	} catch {
 		// Return defaults if config doesn't exist
 		return {
-			project: "canopy",
+			project: "luuna-beacon",
 			version: "1",
 		};
 	}
 }
 
 export async function saveConfig(dir: string, config: Config): Promise<void> {
-	const configPath = join(dir, ".canopy", "config.yaml");
+	const configPath = configFile(dir);
 
 	const obj: YamlMap = {
 		project: config.project,

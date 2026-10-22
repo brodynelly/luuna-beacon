@@ -15,23 +15,23 @@ Total commands: **24**.
 | --- | --- |
 | [`archive`](#archive) | Archive a prompt |
 | [`completions`](#completions) | Generate shell completions |
-| [`config`](#config) | Read, write, and inspect .canopy/config.yaml |
+| [`config`](#config) | Read, write, and inspect .luuna/beacon/config.yaml |
 | [`create`](#create) | Create a new prompt |
 | [`diff`](#diff) | Section-aware diff between two prompt versions |
 | [`doctor`](#doctor) | Check project health and data integrity |
 | [`emit`](#emit) | Render and write prompt to a file |
 | [`history`](#history) | Show version timeline for a prompt |
 | [`import`](#import) | Import an existing .md file as a prompt |
-| [`init`](#init) | Initialize .canopy/ in current directory |
+| [`init`](#init) | Initialize .luuna/beacon/ in current directory |
 | [`list`](#list) | List prompts |
-| [`onboard`](#onboard) | Add canopy section to CLAUDE.md for AI agent discovery |
+| [`onboard`](#onboard) | Add lb section to CLAUDE.md for AI agent discovery |
 | [`pin`](#pin) | Pin prompt to a specific version |
 | [`prime`](#prime) | Output workflow context for AI agents |
 | [`render`](#render) | Render full prompt (resolve inheritance) |
 | [`schema`](#schema) | Schema management (create, show, list, rule add) |
 | [`show`](#show) | Show prompt record |
 | [`stats`](#stats) | Show prompt statistics |
-| [`sync`](#sync) | Stage and commit .canopy/ changes |
+| [`sync`](#sync) | Stage and commit .luuna/beacon/ changes |
 | [`tree`](#tree) | Show inheritance tree for a prompt |
 | [`unpin`](#unpin) | Remove version pin from a prompt |
 | [`update`](#update) | Update a prompt (creates new version) |
@@ -68,7 +68,7 @@ luuna-beacon completions <shell>
 
 ## config
 
-Read, write, and inspect .canopy/config.yaml
+Read, write, and inspect .luuna/beacon/config.yaml
 
 ```bash
 luuna-beacon config
@@ -198,7 +198,7 @@ luuna-beacon import <path> [options]
 
 ## init
 
-Initialize .canopy/ in current directory
+Initialize .luuna/beacon/ in current directory
 
 ```bash
 luuna-beacon init
@@ -223,7 +223,7 @@ luuna-beacon list [options]
 
 ## onboard
 
-Add canopy section to CLAUDE.md for AI agent discovery
+Add lb section to CLAUDE.md for AI agent discovery
 
 ```bash
 luuna-beacon onboard [options]
@@ -317,7 +317,7 @@ luuna-beacon stats
 
 ## sync
 
-Stage and commit .canopy/ changes
+Stage and commit .luuna/beacon/ changes
 
 ```bash
 luuna-beacon sync [options]

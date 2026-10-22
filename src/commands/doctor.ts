@@ -1,8 +1,9 @@
 import { existsSync, readdirSync, readFileSync, statSync, unlinkSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import chalk from "chalk";
 import type { Command } from "commander";
 import { loadConfig } from "../config.ts";
+import { beaconDir } from "../paths.ts";
 import { humanOut, jsonOut, palette } from "../output.ts";
 import { resolvePrompt } from "../render.ts";
 import { dedupById, dedupByIdLast, readJsonl } from "../store.ts";
@@ -45,13 +46,13 @@ function readRawLines(filePath: string): RawLine[] {
 }
 
 // 1. config check
-async function checkConfig(canopyDir: string): Promise<DoctorCheck> {
-	const configPath = join(canopyDir, "config.yaml");
-	if (!existsSync(canopyDir)) {
+async function checkConfig(dataDir: string): Promise<DoctorCheck> {
+	const configPath = join(dataDir, "config.yaml");
+	if (!existsSync(dataDir)) {
 		return {
 			name: "config",
 			status: "fail",
-			message: ".canopy/ directory not found",
+			message: ".luuna/beacon/ directory not found",
 			details: [],
 			fixable: false,
 		};
@@ -66,7 +67,7 @@ async function checkConfig(canopyDir: string): Promise<DoctorCheck> {
 		};
 	}
 	try {
-		const cwd = canopyDir.replace(/\/.canopy$/, "");
+		const cwd = resolve(dataDir, "..", "..");
 		const config = await loadConfig(cwd);
 		if (!config.project) {
 			return {
@@ -96,8 +97,8 @@ async function checkConfig(canopyDir: string): Promise<DoctorCheck> {
 }
 
 // 2. prompts-integrity
-function checkPromptsIntegrity(canopyDir: string): DoctorCheck {
-	const filePath = join(canopyDir, "prompts.jsonl");
+function checkPromptsIntegrity(dataDir: string): DoctorCheck {
+	const filePath = join(dataDir, "prompts.jsonl");
 	if (!existsSync(filePath)) {
 		return {
 			name: "prompts-integrity",
@@ -129,8 +130,8 @@ function checkPromptsIntegrity(canopyDir: string): DoctorCheck {
 }
 
 // 3. schemas-integrity
-function checkSchemasIntegrity(canopyDir: string): DoctorCheck {
-	const filePath = join(canopyDir, "schemas.jsonl");
+function checkSchemasIntegrity(dataDir: string): DoctorCheck {
+	const filePath = join(dataDir, "schemas.jsonl");
 	if (!existsSync(filePath)) {
 		return {
 			name: "schemas-integrity",
@@ -162,9 +163,9 @@ function checkSchemasIntegrity(canopyDir: string): DoctorCheck {
 }
 
 // 4. schema-validation
-async function checkSchemaValidation(canopyDir: string): Promise<DoctorCheck> {
-	const promptsPath = join(canopyDir, "prompts.jsonl");
-	const schemasPath = join(canopyDir, "schemas.jsonl");
+async function checkSchemaValidation(dataDir: string): Promise<DoctorCheck> {
+	const promptsPath = join(dataDir, "prompts.jsonl");
+	const schemasPath = join(dataDir, "schemas.jsonl");
 	if (!existsSync(promptsPath)) {
 		return {
 			name: "schema-validation",
@@ -234,8 +235,8 @@ async function checkSchemaValidation(canopyDir: string): Promise<DoctorCheck> {
 }
 
 // 4b. mulch-shape — structural validation of mulch block + extends_mulch flag
-async function checkMulchShape(canopyDir: string): Promise<DoctorCheck> {
-	const promptsPath = join(canopyDir, "prompts.jsonl");
+async function checkMulchShape(dataDir: string): Promise<DoctorCheck> {
+	const promptsPath = join(dataDir, "prompts.jsonl");
 	if (!existsSync(promptsPath)) {
 		return {
 			name: "mulch-shape",
@@ -291,12 +292,12 @@ async function checkMulchShape(canopyDir: string): Promise<DoctorCheck> {
 }
 
 // 4c. mulch-domains — optional check: validate referenced domain names against
-// .mulch/mulch.config.yaml when present. Warns (does not fail) on unknowns and
+// .luuna/atlas/config.yaml when present. Warns (does not fail) on unknowns and
 // degrades to a pass/no-op when mulch is absent. The result message labels
 // which mulch config was consulted to disambiguate multi-repo setups.
-async function checkMulchDomains(canopyDir: string): Promise<DoctorCheck> {
-	const cwd = canopyDir.replace(/\/.canopy$/, "");
-	const mulchConfigRel = ".mulch/mulch.config.yaml";
+async function checkMulchDomains(dataDir: string): Promise<DoctorCheck> {
+	const cwd = resolve(dataDir, "..", "..");
+	const mulchConfigRel = ".luuna/atlas/config.yaml";
 	const mulchConfigPath = join(cwd, mulchConfigRel);
 
 	if (!existsSync(mulchConfigPath)) {
@@ -333,7 +334,7 @@ async function checkMulchDomains(canopyDir: string): Promise<DoctorCheck> {
 		};
 	}
 
-	const promptsPath = join(canopyDir, "prompts.jsonl");
+	const promptsPath = join(dataDir, "prompts.jsonl");
 	if (!existsSync(promptsPath)) {
 		return {
 			name: "mulch-domains",
@@ -391,8 +392,8 @@ async function checkMulchDomains(canopyDir: string): Promise<DoctorCheck> {
 }
 
 // 5. inheritance
-async function checkInheritance(canopyDir: string): Promise<DoctorCheck> {
-	const promptsPath = join(canopyDir, "prompts.jsonl");
+async function checkInheritance(dataDir: string): Promise<DoctorCheck> {
+	const promptsPath = join(dataDir, "prompts.jsonl");
 	if (!existsSync(promptsPath)) {
 		return {
 			name: "inheritance",
@@ -436,8 +437,8 @@ async function checkInheritance(canopyDir: string): Promise<DoctorCheck> {
 }
 
 // 6. emit-staleness
-async function checkEmitStaleness(canopyDir: string): Promise<DoctorCheck> {
-	const promptsPath = join(canopyDir, "prompts.jsonl");
+async function checkEmitStaleness(dataDir: string): Promise<DoctorCheck> {
+	const promptsPath = join(dataDir, "prompts.jsonl");
 	if (!existsSync(promptsPath)) {
 		return {
 			name: "emit-staleness",
@@ -448,7 +449,7 @@ async function checkEmitStaleness(canopyDir: string): Promise<DoctorCheck> {
 		};
 	}
 
-	const cwd = canopyDir.replace(/\/.canopy$/, "");
+	const cwd = resolve(dataDir, "..", "..");
 	const config = await loadConfig(cwd);
 
 	const allRecords = await readJsonl<Prompt>(promptsPath);
@@ -507,13 +508,13 @@ async function checkEmitStaleness(canopyDir: string): Promise<DoctorCheck> {
 }
 
 // 7. stale-locks
-function checkStaleLocks(canopyDir: string): DoctorCheck {
+function checkStaleLocks(dataDir: string): DoctorCheck {
 	const details: string[] = [];
 	try {
-		const entries = readdirSync(canopyDir);
+		const entries = readdirSync(dataDir);
 		for (const entry of entries) {
 			if (!entry.endsWith(".lock")) continue;
-			const lockPath = join(canopyDir, entry);
+			const lockPath = join(dataDir, entry);
 			try {
 				const st = statSync(lockPath);
 				const age = Date.now() - st.mtimeMs;
@@ -527,7 +528,7 @@ function checkStaleLocks(canopyDir: string): DoctorCheck {
 			}
 		}
 	} catch {
-		// .canopy/ might not be readable
+		// .luuna/beacon/ might not be readable
 	}
 	if (details.length > 0) {
 		return {
@@ -617,17 +618,17 @@ function checkVersionSync(): DoctorCheck {
 }
 
 // Fix logic
-function applyFixes(canopyDir: string, checks: DoctorCheck[]): string[] {
+function applyFixes(dataDir: string, checks: DoctorCheck[]): string[] {
 	const fixed: string[] = [];
 	for (const check of checks) {
 		if (check.status === "pass" || !check.fixable) continue;
 		switch (check.name) {
 			case "stale-locks": {
 				try {
-					const entries = readdirSync(canopyDir);
+					const entries = readdirSync(dataDir);
 					for (const entry of entries) {
 						if (!entry.endsWith(".lock")) continue;
-						const lockPath = join(canopyDir, entry);
+						const lockPath = join(dataDir, entry);
 						try {
 							const st = statSync(lockPath);
 							if (Date.now() - st.mtimeMs > LOCK_STALE_MS) {
@@ -667,40 +668,40 @@ function printCheck(check: DoctorCheck, verbose: boolean): void {
 
 export async function run(fix: boolean, verbose: boolean, json: boolean): Promise<void> {
 	const cwd = process.cwd();
-	const canopyDir = join(cwd, ".canopy");
+	const dataDir = beaconDir(cwd);
 
 	const checks: DoctorCheck[] = [];
 
 	// 1. config
-	const configCheck = await checkConfig(canopyDir);
+	const configCheck = await checkConfig(dataDir);
 	checks.push(configCheck);
 
 	// If config fails, skip remaining checks
 	if (configCheck.status === "fail") {
-		return reportResults(checks, json, verbose, fix, canopyDir);
+		return reportResults(checks, json, verbose, fix, dataDir);
 	}
 
 	// 2-3. JSONL integrity
-	checks.push(checkPromptsIntegrity(canopyDir));
-	checks.push(checkSchemasIntegrity(canopyDir));
+	checks.push(checkPromptsIntegrity(dataDir));
+	checks.push(checkSchemasIntegrity(dataDir));
 
 	// 4. schema validation
-	checks.push(await checkSchemaValidation(canopyDir));
+	checks.push(await checkSchemaValidation(dataDir));
 
 	// 4b. mulch shape validation
-	checks.push(await checkMulchShape(canopyDir));
+	checks.push(await checkMulchShape(dataDir));
 
 	// 4c. mulch domain references (optional, warn-only)
-	checks.push(await checkMulchDomains(canopyDir));
+	checks.push(await checkMulchDomains(dataDir));
 
 	// 5. inheritance
-	checks.push(await checkInheritance(canopyDir));
+	checks.push(await checkInheritance(dataDir));
 
 	// 6. emit staleness
-	checks.push(await checkEmitStaleness(canopyDir));
+	checks.push(await checkEmitStaleness(dataDir));
 
 	// 7. stale locks
-	checks.push(checkStaleLocks(canopyDir));
+	checks.push(checkStaleLocks(dataDir));
 
 	// 8. version sync
 	checks.push(checkVersionSync());
@@ -709,28 +710,28 @@ export async function run(fix: boolean, verbose: boolean, json: boolean): Promis
 	if (fix) {
 		const fixableFailures = checks.filter((ch) => ch.fixable && ch.status !== "pass");
 		if (fixableFailures.length > 0) {
-			const fixedItems = applyFixes(canopyDir, checks);
+			const fixedItems = applyFixes(dataDir, checks);
 
 			// Re-run all checks after fixes
 			const reChecks: DoctorCheck[] = [];
-			const reConfig = await checkConfig(canopyDir);
+			const reConfig = await checkConfig(dataDir);
 			reChecks.push(reConfig);
 			if (reConfig.status !== "fail") {
-				reChecks.push(checkPromptsIntegrity(canopyDir));
-				reChecks.push(checkSchemasIntegrity(canopyDir));
-				reChecks.push(await checkSchemaValidation(canopyDir));
-				reChecks.push(await checkMulchShape(canopyDir));
-				reChecks.push(await checkMulchDomains(canopyDir));
-				reChecks.push(await checkInheritance(canopyDir));
-				reChecks.push(await checkEmitStaleness(canopyDir));
-				reChecks.push(checkStaleLocks(canopyDir));
+				reChecks.push(checkPromptsIntegrity(dataDir));
+				reChecks.push(checkSchemasIntegrity(dataDir));
+				reChecks.push(await checkSchemaValidation(dataDir));
+				reChecks.push(await checkMulchShape(dataDir));
+				reChecks.push(await checkMulchDomains(dataDir));
+				reChecks.push(await checkInheritance(dataDir));
+				reChecks.push(await checkEmitStaleness(dataDir));
+				reChecks.push(checkStaleLocks(dataDir));
 				reChecks.push(checkVersionSync());
 			}
-			return reportResults(reChecks, json, verbose, fix, canopyDir, fixedItems);
+			return reportResults(reChecks, json, verbose, fix, dataDir, fixedItems);
 		}
 	}
 
-	return reportResults(checks, json, verbose, fix, canopyDir);
+	return reportResults(checks, json, verbose, fix, dataDir);
 }
 
 function reportResults(
@@ -738,7 +739,7 @@ function reportResults(
 	jsonMode: boolean,
 	verbose: boolean,
 	_fix: boolean,
-	_canopyDir: string,
+	_dataDir: string,
 	fixedItems?: string[],
 ): void {
 	const summary = {
@@ -762,7 +763,7 @@ function reportResults(
 			...(fixedItems && fixedItems.length > 0 ? { fixed: fixedItems } : {}),
 		});
 	} else {
-		humanOut(`\n${chalk.bold("cn doctor")}\n`);
+		humanOut(`\n${chalk.bold("luuna-beacon doctor")}\n`);
 		for (const check of checks) {
 			printCheck(check, verbose);
 		}
