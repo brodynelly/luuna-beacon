@@ -23,7 +23,7 @@ describe("generate-cli-docs", () => {
 		expect(onDisk).toBe(content);
 	});
 
-	test("buildProgram registers every canopy subcommand", async () => {
+	test("buildProgram registers every beacon subcommand", async () => {
 		const program = await buildProgram();
 		const names = new Set(program.commands.map((c) => c.name()));
 		for (const expected of [
@@ -76,7 +76,7 @@ describe("generate-cli-docs", () => {
 		const md = renderMarkdown([
 			{
 				name: "init",
-				description: "Initialize a canopy store",
+				description: "Initialize a beacon store",
 				args: [],
 				options: [{ flags: "--force", description: "Overwrite" }],
 			},

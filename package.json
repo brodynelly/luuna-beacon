@@ -5,8 +5,7 @@
   "type": "module",
   "bin": {
     "luuna-beacon": "src/index.ts",
-    "lb": "src/index.ts",
-    "cn": "src/index.ts"
+    "lb": "src/index.ts"
   },
   "main": "src/index.ts",
   "files": [

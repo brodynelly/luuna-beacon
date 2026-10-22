@@ -48,17 +48,17 @@ afterEach(() => {
 	}
 });
 
-describe("cn onboard", () => {
+describe("luuna-beacon onboard", () => {
 	it("creates CLAUDE.md when no target file exists", async () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
 		try {
 			await captureOutput(() => onboard([], false));
 			const content = await Bun.file(join(tmpDir, "CLAUDE.md")).text();
-			expect(content).toContain("<!-- canopy:start -->");
-			expect(content).toContain("<!-- canopy:end -->");
-			expect(content).toContain("Prompt Management (Canopy)");
-			expect(content).toContain("cn prime");
+			expect(content).toContain("<!-- luuna-beacon:start -->");
+			expect(content).toContain("<!-- luuna-beacon:end -->");
+			expect(content).toContain("Prompt Management (Luuna Beacon)");
+			expect(content).toContain("lb prime");
 		} finally {
 			process.chdir(origCwd);
 		}
@@ -73,8 +73,8 @@ describe("cn onboard", () => {
 			const content = await Bun.file(join(tmpDir, "CLAUDE.md")).text();
 			expect(content).toContain("# My Project");
 			expect(content).toContain("Existing content.");
-			expect(content).toContain("<!-- canopy:start -->");
-			expect(content).toContain("Prompt Management (Canopy)");
+			expect(content).toContain("<!-- luuna-beacon:start -->");
+			expect(content).toContain("Prompt Management (Luuna Beacon)");
 		} finally {
 			process.chdir(origCwd);
 		}
@@ -136,8 +136,8 @@ describe("cn onboard", () => {
 		process.chdir(tmpDir);
 		try {
 			const { stdout } = await captureOutput(() => onboard(["--stdout"], false));
-			expect(stdout).toContain("<!-- canopy:start -->");
-			expect(stdout).toContain("Prompt Management (Canopy)");
+			expect(stdout).toContain("<!-- luuna-beacon:start -->");
+			expect(stdout).toContain("Prompt Management (Luuna Beacon)");
 			// Should not have created the file
 			expect(existsSync(join(tmpDir, "CLAUDE.md"))).toBe(false);
 		} finally {
@@ -154,7 +154,7 @@ describe("cn onboard", () => {
 			await Bun.write(join(claudeDir, "CLAUDE.md"), "# Agent Instructions\n");
 			await captureOutput(() => onboard([], false));
 			const content = await Bun.file(join(claudeDir, "CLAUDE.md")).text();
-			expect(content).toContain("<!-- canopy:start -->");
+			expect(content).toContain("<!-- luuna-beacon:start -->");
 			// Root CLAUDE.md should NOT have been created
 			expect(existsSync(join(tmpDir, "CLAUDE.md"))).toBe(false);
 		} finally {
@@ -167,14 +167,14 @@ describe("cn onboard", () => {
 		process.chdir(tmpDir);
 		try {
 			const oldContent =
-				"# Project\n\n<!-- canopy:start -->\n## Old Canopy Section\n<!-- canopy-onboard-v:1 -->\nold content\n<!-- canopy:end -->\n";
+				"# Project\n\n<!-- luuna-beacon:start -->\n## Old Beacon Section\n<!-- luuna-beacon-onboard-v:1 -->\nold content\n<!-- luuna-beacon:end -->\n";
 			await Bun.write(join(tmpDir, "CLAUDE.md"), oldContent);
 			await captureOutput(() => onboard([], false));
 			const content = await Bun.file(join(tmpDir, "CLAUDE.md")).text();
 			expect(content).toContain("# Project");
-			expect(content).toContain("canopy-onboard-v:2");
-			expect(content).not.toContain("canopy-onboard-v:1");
-			expect(content).not.toContain("Old Canopy Section");
+			expect(content).toContain("luuna-beacon-onboard-v:3");
+			expect(content).not.toContain("luuna-beacon-onboard-v:1");
+			expect(content).not.toContain("Old Beacon Section");
 		} finally {
 			process.chdir(origCwd);
 		}
@@ -199,7 +199,7 @@ describe("cn onboard", () => {
 		try {
 			await captureOutput(() => onboard([], false));
 			const content = await Bun.file(join(tmpDir, "CLAUDE.md")).text();
-			expect(content).toContain("canopy-onboard-v:2");
+			expect(content).toContain("luuna-beacon-onboard-v:3");
 		} finally {
 			process.chdir(origCwd);
 		}
@@ -210,7 +210,7 @@ describe("cn onboard", () => {
 		process.chdir(tmpDir);
 		try {
 			const { stdout } = await captureOutput(() => onboard(["--help"], false));
-			expect(stdout).toContain("Usage: cn onboard");
+			expect(stdout).toContain("Usage: luuna-beacon onboard");
 		} finally {
 			process.chdir(origCwd);
 		}

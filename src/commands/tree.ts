@@ -4,13 +4,14 @@ import { c, errorOut, humanOut, jsonOut } from "../output.ts";
 import { dedupById, readJsonl } from "../store.ts";
 import type { Prompt } from "../types.ts";
 import { ExitError } from "../types.ts";
+import { promptsFile } from "../paths.ts";
 
 export default async function tree(args: string[], json: boolean): Promise<void> {
 	const cwd = process.cwd();
-	const promptsPath = join(cwd, ".canopy", "prompts.jsonl");
+	const promptsPath = promptsFile(cwd);
 
 	if (args.includes("--help") || args.includes("-h")) {
-		humanOut(`Usage: cn tree <name> [options]
+		humanOut(`Usage: luuna-beacon tree <name> [options]
 
 Options:
   --json    Output as JSON`);
@@ -22,7 +23,7 @@ Options:
 		if (json) {
 			jsonOut({ success: false, command: "tree", error: "Prompt name required" });
 		} else {
-			errorOut("Usage: cn tree <name>");
+			errorOut("Usage: luuna-beacon tree <name>");
 		}
 		throw new ExitError(1);
 	}

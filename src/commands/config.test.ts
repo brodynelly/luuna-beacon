@@ -16,7 +16,7 @@ interface ProcResult {
 }
 
 async function run(args: string[], cwd: string): Promise<ProcResult> {
-	const proc = Bun.spawn(["bun", "run", CLI, ...args], {
+	const proc = Bun.spawn([process.execPath, "run", CLI, ...args], {
 		cwd,
 		stdout: "pipe",
 		stderr: "pipe",
@@ -34,7 +34,7 @@ async function runJson<T = unknown>(args: string[], cwd: string): Promise<T> {
 }
 
 beforeEach(async () => {
-	tmpDir = await mkdtemp(join(tmpdir(), "canopy-config-test-"));
+	tmpDir = await mkdtemp(join(tmpdir(), "beacon-config-test-"));
 	const init = await run(["init"], tmpDir);
 	expect(init.exitCode).toBe(0);
 });
@@ -43,7 +43,7 @@ afterEach(async () => {
 	await rm(tmpDir, { recursive: true, force: true });
 });
 
-describe("cn config --help", () => {
+describe("luuna-beacon config --help", () => {
 	test("lists schema, show, set, unset as subcommands", async () => {
 		const { stdout, exitCode } = await run(["config", "--help"], tmpDir);
 		expect(exitCode).toBe(0);
@@ -54,13 +54,13 @@ describe("cn config --help", () => {
 	});
 });
 
-describe("cn config schema", () => {
+describe("luuna-beacon config schema", () => {
 	test("CLI emits valid JSON to stdout with --json", async () => {
 		const { stdout, exitCode } = await run(["config", "schema", "--json"], tmpDir);
 		expect(exitCode).toBe(0);
 		const parsed = JSON.parse(stdout) as Record<string, unknown>;
-		expect(parsed.title).toBe("Canopy project config");
-		expect(parsed.$id).toBe("https://github.com/jayminwest/canopy/config.schema.json");
+		expect(parsed.title).toBe("Luuna Beacon project config");
+		expect(parsed.$id).toBe("https://github.com/brodynelly/luuna-beacon/config.schema.json");
 		expect(parsed.required).toEqual(["project", "version"]);
 		expect(parsed.additionalProperties).toBe(false);
 	});
@@ -83,15 +83,15 @@ describe("cn config schema", () => {
 		expect(exitCode).toBe(0);
 		expect(stdout.split("\n").length).toBeGreaterThan(5);
 		const parsed = JSON.parse(stdout);
-		expect(parsed.title).toBe("Canopy project config");
+		expect(parsed.title).toBe("Luuna Beacon project config");
 	});
 });
 
-describe("cn config show", () => {
+describe("luuna-beacon config show", () => {
 	test("shows full config as YAML by default", async () => {
 		const { stdout, exitCode } = await run(["config", "show"], tmpDir);
 		expect(exitCode).toBe(0);
-		expect(stdout).toContain("project: canopy");
+		expect(stdout).toContain("project: luuna-beacon");
 		expect(stdout).toContain("version:");
 		expect(stdout).toContain("targets:");
 	});
@@ -104,14 +104,14 @@ describe("cn config show", () => {
 		}>(["config", "show"], tmpDir);
 		expect(result.success).toBe(true);
 		expect(result.command).toBe("config show");
-		expect(result.config.project).toBe("canopy");
+		expect(result.config.project).toBe("luuna-beacon");
 		expect(result.config.version).toBe("1");
 	});
 
 	test("shows scalar at --path without quotes", async () => {
 		const { stdout, exitCode } = await run(["config", "show", "--path", "project"], tmpDir);
 		expect(exitCode).toBe(0);
-		expect(stdout.trim()).toBe("canopy");
+		expect(stdout.trim()).toBe("luuna-beacon");
 	});
 
 	test("shows nested scalar at --path", async () => {
@@ -130,7 +130,7 @@ describe("cn config show", () => {
 		);
 		expect(result.success).toBe(true);
 		expect(result.path).toBe("project");
-		expect(result.value).toBe("canopy");
+		expect(result.value).toBe("luuna-beacon");
 	});
 
 	test("--path on a nested map prints YAML", async () => {
@@ -146,30 +146,30 @@ describe("cn config show", () => {
 	});
 });
 
-describe("cn config set", () => {
+describe("luuna-beacon config set", () => {
 	test("sets project name and persists atomically to disk", async () => {
 		const { exitCode } = await run(["config", "set", "project", "renamed"], tmpDir);
 		expect(exitCode).toBe(0);
-		const onDisk = await readFile(join(tmpDir, ".canopy", "config.yaml"), "utf8");
+		const onDisk = await readFile(join(tmpDir, ".luuna", "beacon", "config.yaml"), "utf8");
 		expect(onDisk).toContain("project: renamed");
 	});
 
 	test("leaves no .tmp.* files behind after success", async () => {
 		await run(["config", "set", "project", "newname"], tmpDir);
-		const files = await readdir(join(tmpDir, ".canopy"));
+		const files = await readdir(join(tmpDir, ".luuna", "beacon"));
 		expect(files.filter((f) => f.includes(".tmp."))).toEqual([]);
 	});
 
 	test("leaves no .tmp.* files behind after validation failure", async () => {
 		const { exitCode } = await run(["config", "set", "bogus_key", "1"], tmpDir);
 		expect(exitCode).toBe(1);
-		const files = await readdir(join(tmpDir, ".canopy"));
+		const files = await readdir(join(tmpDir, ".luuna", "beacon"));
 		expect(files.filter((f) => f.includes(".tmp."))).toEqual([]);
 	});
 
 	test("releases the lock on validation failure (no stale .lock file)", async () => {
 		await run(["config", "set", "bogus_key", "1"], tmpDir);
-		const files = await readdir(join(tmpDir, ".canopy"));
+		const files = await readdir(join(tmpDir, ".luuna", "beacon"));
 		expect(files.filter((f) => f.endsWith(".lock"))).toEqual([]);
 	});
 
@@ -260,12 +260,12 @@ describe("cn config set", () => {
 	});
 });
 
-describe("cn config unset", () => {
+describe("luuna-beacon config unset", () => {
 	test("removes a present nested target", async () => {
 		await run(["config", "set", "targets.docs", "{dir: docs/prompts}"], tmpDir);
 		const { exitCode } = await run(["config", "unset", "targets.docs"], tmpDir);
 		expect(exitCode).toBe(0);
-		const onDisk = await readFile(join(tmpDir, ".canopy", "config.yaml"), "utf8");
+		const onDisk = await readFile(join(tmpDir, ".luuna", "beacon", "config.yaml"), "utf8");
 		expect(onDisk).not.toContain("docs/prompts");
 	});
 
@@ -292,12 +292,12 @@ describe("cn config unset", () => {
 
 	test("leaves no stale .lock file after a rejected unset", async () => {
 		await run(["config", "unset", "project"], tmpDir);
-		const files = await readdir(join(tmpDir, ".canopy"));
+		const files = await readdir(join(tmpDir, ".luuna", "beacon"));
 		expect(files.filter((f) => f.endsWith(".lock"))).toEqual([]);
 	});
 });
 
-describe("cn config concurrency", () => {
+describe("luuna-beacon config concurrency", () => {
 	test("5 concurrent sets on disjoint paths all succeed; final file is schema-valid", async () => {
 		const writes = [
 			run(["config", "set", "targets.t1", "{dir: d1}"], tmpDir),
@@ -325,7 +325,7 @@ describe("cn config concurrency", () => {
 		expect(validate(final.config)).toBe(true);
 
 		// No stale .lock or .tmp.* files
-		const files = await readdir(join(tmpDir, ".canopy"));
+		const files = await readdir(join(tmpDir, ".luuna", "beacon"));
 		expect(files.filter((f) => f.endsWith(".lock"))).toEqual([]);
 		expect(files.filter((f) => f.includes(".tmp."))).toEqual([]);
 	});

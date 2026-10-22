@@ -46,7 +46,7 @@ afterEach(() => {
 	if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true });
 });
 
-describe("cn create", () => {
+describe("luuna-beacon create", () => {
 	it("creates a new prompt", async () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
@@ -66,7 +66,7 @@ describe("cn create", () => {
 			const parsed = JSON.parse(stdout.trim());
 			expect(parsed.success).toBe(true);
 			expect(parsed.name).toBe("my-prompt");
-			expect(parsed.id).toMatch(/^canopy-[0-9a-f]{4}$/);
+			expect(parsed.id).toMatch(/^luuna-beacon-[0-9a-f]{4}$/);
 		} finally {
 			process.chdir(origCwd);
 		}
@@ -117,7 +117,7 @@ describe("cn create", () => {
 
 			// Add sections to base via update
 			const { readJsonl, appendJsonl, dedupById } = await import("../store.ts");
-			const promptsPath = join(tmpDir, ".canopy", "prompts.jsonl");
+			const promptsPath = join(tmpDir, ".luuna", "beacon", "prompts.jsonl");
 			const records = await readJsonl<Prompt>(promptsPath);
 			const current = dedupById(records);
 			const base = current.find((p) => p.name === "base");

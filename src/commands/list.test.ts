@@ -44,7 +44,7 @@ afterEach(() => {
 	if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true });
 });
 
-describe("cn list", () => {
+describe("luuna-beacon list", () => {
 	it("returns empty message when no prompts exist", async () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);

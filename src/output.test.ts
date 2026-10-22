@@ -10,10 +10,10 @@ describe("redact", () => {
 	});
 
 	test("redacts npmToken at top level", () => {
-		const input = { npmToken: "npm_supersecret", project: "canopy" };
+		const input = { npmToken: "npm_supersecret", project: "luuna-beacon" };
 		const out = redact(input) as Record<string, unknown>;
 		expect(out.npmToken).toBe("[REDACTED]");
-		expect(out.project).toBe("canopy");
+		expect(out.project).toBe("luuna-beacon");
 	});
 
 	test("redacts apiKey and secret", () => {

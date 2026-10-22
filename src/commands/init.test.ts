@@ -43,19 +43,19 @@ afterEach(() => {
 	}
 });
 
-describe("cn init", () => {
-	it("creates .canopy/ directory and files", async () => {
+describe("luuna-beacon init", () => {
+	it("creates .luuna/beacon/ directory and files", async () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
 
 		try {
 			const { stdout } = await captureOutput(() => init([], false));
 			expect(stdout).toContain("Initialized");
-			expect(existsSync(join(tmpDir, ".canopy"))).toBe(true);
-			expect(existsSync(join(tmpDir, ".canopy", "config.yaml"))).toBe(true);
-			expect(existsSync(join(tmpDir, ".canopy", "prompts.jsonl"))).toBe(true);
-			expect(existsSync(join(tmpDir, ".canopy", "schemas.jsonl"))).toBe(true);
-			expect(existsSync(join(tmpDir, ".canopy", ".gitignore"))).toBe(true);
+			expect(existsSync(join(tmpDir, ".luuna", "beacon"))).toBe(true);
+			expect(existsSync(join(tmpDir, ".luuna", "beacon", "config.yaml"))).toBe(true);
+			expect(existsSync(join(tmpDir, ".luuna", "beacon", "prompts.jsonl"))).toBe(true);
+			expect(existsSync(join(tmpDir, ".luuna", "beacon", "schemas.jsonl"))).toBe(true);
+			expect(existsSync(join(tmpDir, ".luuna", "beacon", ".gitignore"))).toBe(true);
 		} finally {
 			process.chdir(origCwd);
 		}
@@ -82,27 +82,27 @@ describe("cn init", () => {
 		try {
 			await captureOutput(() => init([], false));
 			const gitattrs = await Bun.file(join(tmpDir, ".gitattributes")).text();
-			expect(gitattrs).toContain(".canopy/prompts.jsonl merge=union");
-			expect(gitattrs).toContain(".canopy/schemas.jsonl merge=union");
+			expect(gitattrs).toContain(".luuna/beacon/prompts.jsonl merge=union");
+			expect(gitattrs).toContain(".luuna/beacon/schemas.jsonl merge=union");
 		} finally {
 			process.chdir(origCwd);
 		}
 	});
 
-	it("still appends canopy entries when another tool's merge=union is already present", async () => {
+	it("still appends beacon entries when another tool's merge=union is already present", async () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
 
 		try {
-			// Simulate seeds or mulch having already added merge=union for their own files
+			// Simulate missions or atlas having already added merge=union for their own files
 			await Bun.write(
 				join(tmpDir, ".gitattributes"),
-				".seeds/issues.jsonl merge=union\n.mulch/records.jsonl merge=union\n",
+				".luuna/missions/issues.jsonl merge=union\n.luuna/atlas/records.jsonl merge=union\n",
 			);
 			await captureOutput(() => init([], false));
 			const gitattrs = await Bun.file(join(tmpDir, ".gitattributes")).text();
-			expect(gitattrs).toContain(".canopy/prompts.jsonl merge=union");
-			expect(gitattrs).toContain(".canopy/schemas.jsonl merge=union");
+			expect(gitattrs).toContain(".luuna/beacon/prompts.jsonl merge=union");
+			expect(gitattrs).toContain(".luuna/beacon/schemas.jsonl merge=union");
 		} finally {
 			process.chdir(origCwd);
 		}
@@ -114,9 +114,9 @@ describe("cn init", () => {
 
 		try {
 			await captureOutput(() => init([], false));
-			const configText = await Bun.file(join(tmpDir, ".canopy", "config.yaml")).text();
+			const configText = await Bun.file(join(tmpDir, ".luuna", "beacon", "config.yaml")).text();
 			const parsed = parseYaml(configText);
-			expect(parsed.project).toBe("canopy");
+			expect(parsed.project).toBe("luuna-beacon");
 			expect(parsed.version).toBe("1");
 			// Should have targets, not emitDir
 			expect(parsed.targets).toBeDefined();
@@ -130,7 +130,7 @@ describe("cn init", () => {
 		}
 	});
 
-	it("fails if .canopy/ already exists", async () => {
+	it("fails if .luuna/beacon/ already exists", async () => {
 		const origCwd = process.cwd();
 		process.chdir(tmpDir);
 

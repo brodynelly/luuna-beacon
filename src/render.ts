@@ -1,4 +1,4 @@
-import type { MulchBlock, Prompt, Section } from "./types.ts";
+import type { AtlasBlock, Prompt, Section } from "./types.ts";
 import { MAX_INHERIT_DEPTH } from "./types.ts";
 
 export interface RenderResult {
@@ -6,7 +6,7 @@ export interface RenderResult {
 	frontmatter: Record<string, unknown>;
 	resolvedFrom: string[];
 	version: number;
-	mulch?: MulchBlock;
+	atlas?: AtlasBlock;
 }
 
 /**
@@ -49,14 +49,14 @@ function resolveInner(
 	// No parent and no mixins — return own sections (excluding empty-body removals)
 	if (!prompt.extends && (!prompt.mixins || prompt.mixins.length === 0)) {
 		const sections = prompt.sections.filter((s) => s.body !== "");
-		return withMulch(
+		return withAtlas(
 			{
 				sections,
 				frontmatter: prompt.frontmatter ?? {},
 				resolvedFrom: [name],
 				version: prompt.version,
 			},
-			prompt.mulch,
+			prompt.atlas,
 		);
 	}
 
@@ -64,15 +64,15 @@ function resolveInner(
 	let baseSections: Section[] = [];
 	let baseFrontmatter: Record<string, unknown> = {};
 	let baseResolvedFrom: string[] = [];
-	let baseMulch: MulchBlock | undefined;
-	const mixinMulches: (MulchBlock | undefined)[] = [];
+	let baseAtlas: AtlasBlock | undefined;
+	const mixinAtlases: (AtlasBlock | undefined)[] = [];
 
 	if (prompt.extends) {
 		const parentResult = resolveInner(prompt.extends, prompts, undefined, visited);
 		baseSections = parentResult.sections;
 		baseFrontmatter = parentResult.frontmatter;
 		baseResolvedFrom = parentResult.resolvedFrom;
-		baseMulch = parentResult.mulch;
+		baseAtlas = parentResult.atlas;
 	}
 
 	// Apply each mixin left-to-right on top of the base
@@ -86,53 +86,53 @@ function resolveInner(
 			baseSections = mergeSections(baseSections, mixinResult.sections);
 			baseFrontmatter = { ...baseFrontmatter, ...mixinResult.frontmatter };
 			baseResolvedFrom = [...baseResolvedFrom, ...mixinResult.resolvedFrom];
-			mixinMulches.push(mixinResult.mulch);
+			mixinAtlases.push(mixinResult.atlas);
 		}
 	}
 
 	// Finally apply the focal prompt's own sections on top
 	const merged = mergeSections(baseSections, prompt.sections);
 
-	// Resolve mulch with override-vs-merge semantics gated by extends_mulch.
-	// extends_mulch=true: union parent + each mixin's resolved mulch + focal.mulch
+	// Resolve atlas with override-vs-merge semantics gated by extends_atlas.
+	// extends_atlas=true: union parent + each mixin's resolved atlas + focal.atlas
 	//   (domains/files unioned, budget/on_empty last-wins).
-	// extends_mulch=false (default): focal.mulch wholesale overrides — no inheritance,
-	//   not even from mixins. If focal has no mulch block, result is undefined.
-	let resolvedMulch: MulchBlock | undefined;
-	if (prompt.extends_mulch) {
-		resolvedMulch = baseMulch;
-		for (const m of mixinMulches) {
-			resolvedMulch = mergeMulch(resolvedMulch, m);
+	// extends_atlas=false (default): focal.atlas wholesale overrides — no inheritance,
+	//   not even from mixins. If focal has no atlas block, result is undefined.
+	let resolvedAtlas: AtlasBlock | undefined;
+	if (prompt.extends_atlas) {
+		resolvedAtlas = baseAtlas;
+		for (const m of mixinAtlases) {
+			resolvedAtlas = mergeAtlas(resolvedAtlas, m);
 		}
-		resolvedMulch = mergeMulch(resolvedMulch, prompt.mulch);
+		resolvedAtlas = mergeAtlas(resolvedAtlas, prompt.atlas);
 	} else {
-		resolvedMulch = prompt.mulch;
+		resolvedAtlas = prompt.atlas;
 	}
 
-	return withMulch(
+	return withAtlas(
 		{
 			sections: merged,
 			frontmatter: { ...baseFrontmatter, ...(prompt.frontmatter ?? {}) },
 			resolvedFrom: [...baseResolvedFrom, name],
 			version: prompt.version,
 		},
-		resolvedMulch,
+		resolvedAtlas,
 	);
 }
 
-function withMulch(result: RenderResult, mulch: MulchBlock | undefined): RenderResult {
-	if (mulch === undefined) return result;
-	return { ...result, mulch };
+function withAtlas(result: RenderResult, atlas: AtlasBlock | undefined): RenderResult {
+	if (atlas === undefined) return result;
+	return { ...result, atlas };
 }
 
-function mergeMulch(
-	base: MulchBlock | undefined,
-	overlay: MulchBlock | undefined,
-): MulchBlock | undefined {
+function mergeAtlas(
+	base: AtlasBlock | undefined,
+	overlay: AtlasBlock | undefined,
+): AtlasBlock | undefined {
 	if (base === undefined) return overlay;
 	if (overlay === undefined) return base;
 
-	const merged: MulchBlock = {};
+	const merged: AtlasBlock = {};
 
 	const baseDomains = base.prime?.domains;
 	const overlayDomains = overlay.prime?.domains;

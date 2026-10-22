@@ -1,51 +1,53 @@
 import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import type { Command } from "commander";
+import { migrateLegacyLayout } from "../legacy-layout.ts";
 import { saveConfig } from "../config.ts";
 import { errorOut, humanOut, jsonOut } from "../output.ts";
 import { ExitError } from "../types.ts";
 
 export default async function init(_args: string[], json: boolean): Promise<void> {
 	const cwd = process.cwd();
-	const canopyDir = join(cwd, ".canopy");
 
 	if (_args.includes("--help") || _args.includes("-h")) {
-		humanOut(`Usage: cn init
+		humanOut(`Usage: luuna-beacon init
 
-Initializes .canopy/ in the current directory with config and empty JSONL stores.`);
+Initializes .luuna/beacon/ in the current directory with config and empty JSONL stores.`);
 		return;
 	}
 
-	if (existsSync(canopyDir)) {
+	const dataDir = join(cwd, ".luuna", "beacon");
+	migrateLegacyLayout(cwd);
+	if (existsSync(dataDir)) {
 		if (json) {
-			jsonOut({ success: false, command: "init", error: ".canopy/ already exists" });
+			jsonOut({ success: false, command: "init", error: ".luuna/beacon/ already exists" });
 		} else {
-			errorOut(".canopy/ already exists");
+			errorOut(".luuna/beacon/ already exists");
 		}
 		throw new ExitError(1);
 	}
 
-	mkdirSync(canopyDir, { recursive: true });
+	mkdirSync(dataDir, { recursive: true });
 
 	// Write default config
 	await saveConfig(cwd, {
-		project: "canopy",
+		project: "luuna-beacon",
 		version: "1",
 		targets: {
 			default: { dir: "agents", default: true },
 		},
 	});
 
-	// Write .gitignore for .canopy/
-	await Bun.write(join(canopyDir, ".gitignore"), "*.lock\n");
+	// Write .gitignore for .luuna/beacon/
+	await Bun.write(join(dataDir, ".gitignore"), "*.lock\n");
 
 	// Create empty JSONL files
-	await Bun.write(join(canopyDir, "prompts.jsonl"), "");
-	await Bun.write(join(canopyDir, "schemas.jsonl"), "");
+	await Bun.write(join(dataDir, "prompts.jsonl"), "");
+	await Bun.write(join(dataDir, "schemas.jsonl"), "");
 
 	// Append .gitattributes to project root
 	const gitattrsPath = join(cwd, ".gitattributes");
-	const gitattrsEntry = ".canopy/prompts.jsonl merge=union\n.canopy/schemas.jsonl merge=union\n";
+	const gitattrsEntry = ".luuna/beacon/prompts.jsonl merge=union\n.luuna/beacon/schemas.jsonl merge=union\n";
 
 	let existing = "";
 	try {
@@ -54,15 +56,15 @@ Initializes .canopy/ in the current directory with config and empty JSONL stores
 		existing = "";
 	}
 
-	if (!existing.includes(".canopy/prompts.jsonl")) {
+	if (!existing.includes(".luuna/beacon/prompts.jsonl")) {
 		await Bun.write(gitattrsPath, existing + gitattrsEntry);
 	}
 
 	if (json) {
-		jsonOut({ success: true, command: "init", dir: canopyDir });
+		jsonOut({ success: true, command: "init", dir: dataDir });
 	} else {
-		humanOut(`Initialized .canopy/ in ${cwd}`);
-		humanOut("  config.yaml: project=canopy, targets: default → agents/");
+		humanOut(`Initialized .luuna/beacon/ in ${cwd}`);
+		humanOut("  config.yaml: project=luuna-beacon, targets: default → agents/");
 		humanOut("  prompts.jsonl created");
 		humanOut("  schemas.jsonl created");
 		humanOut("  .gitattributes updated with merge=union");
@@ -72,7 +74,7 @@ Initializes .canopy/ in the current directory with config and empty JSONL stores
 export function registerInitCommand(program: Command): void {
 	program
 		.command("init")
-		.description("Initialize .canopy/ in current directory")
+		.description("Initialize .luuna/beacon/ in current directory")
 		.action(async () => {
 			const json: boolean = program.opts().json ?? false;
 			const args = json ? ["--json"] : [];

@@ -1,20 +1,25 @@
-export const START_MARKER = "<!-- canopy:start -->";
-export const END_MARKER = "<!-- canopy:end -->";
+import { upgradeLegacyMarkers } from "./legacy-layout.ts";
 
-export const ONBOARD_VERSION = 2;
-export const VERSION_MARKER = `<!-- canopy-onboard-v:${String(ONBOARD_VERSION)} -->`;
+export const START_MARKER = "<!-- luuna-beacon:start -->";
+export const END_MARKER = "<!-- luuna-beacon:end -->";
 
-export function hasMarkerSection(content: string): boolean {
+export const ONBOARD_VERSION = 3;
+export const VERSION_MARKER = `<!-- luuna-beacon-onboard-v:${String(ONBOARD_VERSION)} -->`;
+
+export function hasMarkerSection(rawContent: string): boolean {
+	const content = upgradeLegacyMarkers(rawContent);
 	return content.includes(START_MARKER) && content.includes(END_MARKER);
 }
 
-export function detectStatus(content: string): "missing" | "current" | "outdated" {
+export function detectStatus(rawContent: string): "missing" | "current" | "outdated" {
+	const content = upgradeLegacyMarkers(rawContent);
 	if (!hasMarkerSection(content)) return "missing";
 	if (content.includes(VERSION_MARKER)) return "current";
 	return "outdated";
 }
 
-export function replaceMarkerSection(content: string, newSection: string): string | null {
+export function replaceMarkerSection(rawContent: string, newSection: string): string | null {
+	const content = upgradeLegacyMarkers(rawContent);
 	const startIdx = content.indexOf(START_MARKER);
 	const endIdx = content.indexOf(END_MARKER);
 	if (startIdx === -1 || endIdx === -1) return null;

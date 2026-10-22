@@ -143,7 +143,7 @@ describe("serializeYaml", () => {
 describe("parseScalarOrFlow", () => {
 	it("parses bare strings", () => {
 		expect(parseScalarOrFlow("hello")).toBe("hello");
-		expect(parseScalarOrFlow("agents/canopy")).toBe("agents/canopy");
+		expect(parseScalarOrFlow("agents/beacon")).toBe("agents/beacon");
 	});
 
 	it("parses booleans", () => {

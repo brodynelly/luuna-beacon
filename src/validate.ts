@@ -69,8 +69,8 @@ export function validatePrompt(
 		}
 	}
 
-	// Mulch block / extends_mulch shape validation runs regardless of schema rules.
-	errors.push(...validateMulch(prompt));
+	// Atlas block / extends_atlas shape validation runs regardless of schema rules.
+	errors.push(...validateAtlas(prompt));
 
 	return {
 		valid: errors.length === 0,
@@ -79,102 +79,102 @@ export function validatePrompt(
 	};
 }
 
-const VALID_MULCH_KEYS = new Set(["prime", "budget", "on_empty"]);
+const VALID_ATLAS_KEYS = new Set(["prime", "budget", "on_empty"]);
 const VALID_PRIME_KEYS = new Set(["domains", "files"]);
 const VALID_ON_EMPTY = new Set(["skip", "warn", "error"]);
 
 /**
- * Validate the shape of a prompt's `mulch` block and `extends_mulch` flag.
+ * Validate the shape of a prompt's `atlas` block and `extends_atlas` flag.
  * Returns structural errors (unknown keys, wrong types, bad enum values).
- * Does not check semantics like "domains exist in .mulch/mulch.config.yaml" —
- * that lives in the optional doctor check (canopy-552d).
+ * Does not check semantics like "domains exist in .luuna/atlas/config.yaml" —
+ * that lives in the optional doctor check (upstream tracker).
  */
-export function validateMulch(prompt: Prompt): ValidationError[] {
+export function validateAtlas(prompt: Prompt): ValidationError[] {
 	const errors: ValidationError[] = [];
 
-	const extendsMulch = (prompt as { extends_mulch?: unknown }).extends_mulch;
-	if (extendsMulch !== undefined && typeof extendsMulch !== "boolean") {
+	const extendsAtlas = (prompt as { extends_atlas?: unknown }).extends_atlas;
+	if (extendsAtlas !== undefined && typeof extendsAtlas !== "boolean") {
 		errors.push({
-			section: "extends_mulch",
+			section: "extends_atlas",
 			rule: "type",
-			message: `extends_mulch must be a boolean (got ${describeValue(extendsMulch)})`,
+			message: `extends_atlas must be a boolean (got ${describeValue(extendsAtlas)})`,
 		});
 	}
 
-	const mulch = (prompt as { mulch?: unknown }).mulch;
-	if (mulch === undefined) return errors;
+	const atlas = (prompt as { atlas?: unknown }).atlas;
+	if (atlas === undefined) return errors;
 
-	if (!isPlainObject(mulch)) {
+	if (!isPlainObject(atlas)) {
 		errors.push({
-			section: "mulch",
+			section: "atlas",
 			rule: "type",
-			message: `mulch must be an object (got ${describeValue(mulch)})`,
+			message: `atlas must be an object (got ${describeValue(atlas)})`,
 		});
 		return errors;
 	}
 
-	for (const key of Object.keys(mulch)) {
-		if (!VALID_MULCH_KEYS.has(key)) {
+	for (const key of Object.keys(atlas)) {
+		if (!VALID_ATLAS_KEYS.has(key)) {
 			errors.push({
-				section: "mulch",
+				section: "atlas",
 				rule: "unknown-key",
-				message: `Unknown key "${key}" in mulch block (allowed: prime, budget, on_empty)`,
+				message: `Unknown key "${key}" in atlas block (allowed: prime, budget, on_empty)`,
 			});
 		}
 	}
 
-	if (mulch.budget !== undefined) {
-		const b = mulch.budget;
+	if (atlas.budget !== undefined) {
+		const b = atlas.budget;
 		if (typeof b !== "number" || !Number.isFinite(b) || b < 0) {
 			errors.push({
-				section: "mulch.budget",
+				section: "atlas.budget",
 				rule: "type",
-				message: `mulch.budget must be a non-negative finite number (got ${describeValue(b)})`,
+				message: `atlas.budget must be a non-negative finite number (got ${describeValue(b)})`,
 			});
 		}
 	}
 
-	if (mulch.on_empty !== undefined) {
-		const v = mulch.on_empty;
+	if (atlas.on_empty !== undefined) {
+		const v = atlas.on_empty;
 		if (typeof v !== "string" || !VALID_ON_EMPTY.has(v)) {
 			errors.push({
-				section: "mulch.on_empty",
+				section: "atlas.on_empty",
 				rule: "enum",
-				message: `mulch.on_empty must be one of "skip", "warn", "error" (got ${describeValue(v)})`,
+				message: `atlas.on_empty must be one of "skip", "warn", "error" (got ${describeValue(v)})`,
 			});
 		}
 	}
 
-	if (mulch.prime !== undefined) {
-		const prime = mulch.prime;
+	if (atlas.prime !== undefined) {
+		const prime = atlas.prime;
 		if (!isPlainObject(prime)) {
 			errors.push({
-				section: "mulch.prime",
+				section: "atlas.prime",
 				rule: "type",
-				message: `mulch.prime must be an object (got ${describeValue(prime)})`,
+				message: `atlas.prime must be an object (got ${describeValue(prime)})`,
 			});
 		} else {
 			for (const key of Object.keys(prime)) {
 				if (!VALID_PRIME_KEYS.has(key)) {
 					errors.push({
-						section: "mulch.prime",
+						section: "atlas.prime",
 						rule: "unknown-key",
-						message: `Unknown key "${key}" in mulch.prime (allowed: domains, files)`,
+						message: `Unknown key "${key}" in atlas.prime (allowed: domains, files)`,
 					});
 				}
 			}
 			if (prime.domains !== undefined && !isStringArray(prime.domains)) {
 				errors.push({
-					section: "mulch.prime.domains",
+					section: "atlas.prime.domains",
 					rule: "type",
-					message: `mulch.prime.domains must be an array of strings (got ${describeValue(prime.domains)})`,
+					message: `atlas.prime.domains must be an array of strings (got ${describeValue(prime.domains)})`,
 				});
 			}
 			if (prime.files !== undefined && !isStringArray(prime.files)) {
 				errors.push({
-					section: "mulch.prime.files",
+					section: "atlas.prime.files",
 					rule: "type",
-					message: `mulch.prime.files must be an array of strings (got ${describeValue(prime.files)})`,
+					message: `atlas.prime.files must be an array of strings (got ${describeValue(prime.files)})`,
 				});
 			}
 		}

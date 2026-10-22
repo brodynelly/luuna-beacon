@@ -4,13 +4,14 @@ import { c, errorOut, humanOut, icons, jsonOut } from "../output.ts";
 import { dedupById, getVersions, readJsonl } from "../store.ts";
 import type { Prompt } from "../types.ts";
 import { ExitError } from "../types.ts";
+import { promptsFile } from "../paths.ts";
 
 export default async function history(args: string[], json: boolean): Promise<void> {
 	const cwd = process.cwd();
-	const promptsPath = join(cwd, ".canopy", "prompts.jsonl");
+	const promptsPath = promptsFile(cwd);
 
 	if (args.includes("--help") || args.includes("-h")) {
-		humanOut(`Usage: cn history <name> [options]
+		humanOut(`Usage: luuna-beacon history <name> [options]
 
 Options:
   --limit <n>    Max versions to show (default: 20)
@@ -23,7 +24,7 @@ Options:
 		if (json) {
 			jsonOut({ success: false, command: "history", error: "Prompt name required" });
 		} else {
-			errorOut("Usage: cn history <name> [--limit <n>]");
+			errorOut("Usage: luuna-beacon history <name> [--limit <n>]");
 		}
 		throw new ExitError(1);
 	}

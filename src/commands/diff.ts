@@ -4,6 +4,7 @@ import { c, errorOut, humanOut, icons, jsonOut } from "../output.ts";
 import { readJsonl } from "../store.ts";
 import type { Prompt, Section } from "../types.ts";
 import { ExitError } from "../types.ts";
+import { promptsFile } from "../paths.ts";
 
 export interface SectionChange {
 	section: string;
@@ -38,10 +39,10 @@ export function diffSections(fromSections: Section[], toSections: Section[]): Se
 
 export default async function diff(args: string[], json: boolean): Promise<void> {
 	const cwd = process.cwd();
-	const promptsPath = join(cwd, ".canopy", "prompts.jsonl");
+	const promptsPath = promptsFile(cwd);
 
 	if (args.includes("--help") || args.includes("-h")) {
-		humanOut(`Usage: cn diff <name> <v1> <v2> [options]
+		humanOut(`Usage: luuna-beacon diff <name> <v1> <v2> [options]
 
 Options:
   --json    Output as JSON`);
@@ -51,9 +52,9 @@ Options:
 	const positional = args.filter((a) => !a.startsWith("--"));
 	if (positional.length < 3) {
 		if (json) {
-			jsonOut({ success: false, command: "diff", error: "Usage: cn diff <name> <v1> <v2>" });
+			jsonOut({ success: false, command: "diff", error: "Usage: luuna-beacon diff <name> <v1> <v2>" });
 		} else {
-			errorOut("Usage: cn diff <name> <v1> <v2>");
+			errorOut("Usage: luuna-beacon diff <name> <v1> <v2>");
 		}
 		throw new ExitError(1);
 	}

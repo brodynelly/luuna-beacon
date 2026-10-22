@@ -1,10 +1,10 @@
-// `cn config` — schema-driven read/write surface for `.canopy/config.yaml`.
+// `luuna-beacon config` — schema-driven read/write surface for `.luuna/beacon/config.yaml`.
 //
 // Designed as warren V2's wire contract (warren ROADMAP R-10):
-//   - `cn config schema --json` emits the JSON Schema (warren auto-renders a form)
-//   - `cn config show [--path <p>]` reads the current value
-//   - `cn config set <path> <value>` validates + writes atomically (YAML-parsed)
-//   - `cn config unset <path>` removes a value
+//   - `luuna-beacon config schema --json` emits the JSON Schema (warren auto-renders a form)
+//   - `luuna-beacon config show [--path <p>]` reads the current value
+//   - `luuna-beacon config set <path> <value>` validates + writes atomically (YAML-parsed)
+//   - `luuna-beacon config unset <path>` removes a value
 //
 // Writes hold the config.yaml advisory lock; mutations validate the entire
 // post-write file against configSchema() before persisting. Errors are thrown
@@ -27,9 +27,10 @@ import {
 	type YamlMap,
 	type YamlScalar,
 } from "../yaml.ts";
+import { configFile } from "../paths.ts";
 
 function configPath(cwd: string): string {
-	return join(cwd, ".canopy", "config.yaml");
+	return configFile(cwd);
 }
 
 function pathParts(path: string): string[] {
@@ -48,8 +49,8 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
 	return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
-// Coerce the canopy string-only YamlMap into a typed view for schema validation.
-// canopy's parseYaml returns strings for all scalars; the schema expects a
+// Coerce the beacon string-only YamlMap into a typed view for schema validation.
+// the beacon parseYaml returns strings for all scalars; the schema expects a
 // boolean for `targets.<name>.default`, so map "true"/"false" → boolean here.
 // Other fields stay as strings (project, version, dir) which matches the schema.
 function toTypedView(raw: YamlMap): Record<string, YamlScalar> {
@@ -84,8 +85,8 @@ function coerceTargetsBlock(targets: YamlMap): Record<string, YamlScalar> {
 	return out;
 }
 
-// Convert the typed view back to canopy's string-only YamlMap for serialization.
-// Booleans/numbers stringify (matches existing canopy convention: `default: "true"`
+// Convert the typed view back to the beacon string-only YamlMap for serialization.
+// Booleans/numbers stringify (matches existing convention: `default: "true"`
 // stored in saveConfig). Arrays of non-strings get String()-coerced; the schema
 // only allows string arrays (targets.<name>.tags), so this is lossless in practice.
 function toYamlMap(data: Record<string, YamlScalar>): YamlMap {
@@ -355,11 +356,11 @@ function emitError(command: string, err: unknown, jsonMode: boolean): void {
 export function registerConfigCommand(program: Command): void {
 	const config = program
 		.command("config")
-		.description("Read, write, and inspect .canopy/config.yaml");
+		.description("Read, write, and inspect .luuna/beacon/config.yaml");
 
 	config
 		.command("schema")
-		.description("Emit the JSON Schema for .canopy/config.yaml")
+		.description("Emit the JSON Schema for .luuna/beacon/config.yaml")
 		.option("--json", "Compact single-line JSON (default is pretty-printed)")
 		.action(async (opts: Record<string, unknown>) => {
 			const jsonMode = opts.json === true || program.opts().json === true;

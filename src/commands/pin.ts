@@ -4,13 +4,14 @@ import { c, errorOut, fmt, humanOut, jsonOut } from "../output.ts";
 import { acquireLock, appendJsonl, dedupById, readJsonl, releaseLock } from "../store.ts";
 import type { Prompt } from "../types.ts";
 import { ExitError } from "../types.ts";
+import { promptsFile } from "../paths.ts";
 
 export default async function pin(args: string[], json: boolean): Promise<void> {
 	const cwd = process.cwd();
-	const promptsPath = join(cwd, ".canopy", "prompts.jsonl");
+	const promptsPath = promptsFile(cwd);
 
 	if (args.includes("--help") || args.includes("-h")) {
-		humanOut(`Usage: cn pin <name>@<version> [options]
+		humanOut(`Usage: luuna-beacon pin <name>@<version> [options]
 
 Options:
   --json    Output as JSON`);
@@ -20,9 +21,9 @@ Options:
 	const nameArg = args.filter((a) => !a.startsWith("--"))[0];
 	if (!nameArg) {
 		if (json) {
-			jsonOut({ success: false, command: "pin", error: "Usage: cn pin <name>@<version>" });
+			jsonOut({ success: false, command: "pin", error: "Usage: luuna-beacon pin <name>@<version>" });
 		} else {
-			errorOut("Usage: cn pin <name>@<version>");
+			errorOut("Usage: luuna-beacon pin <name>@<version>");
 		}
 		throw new ExitError(1);
 	}
@@ -31,9 +32,9 @@ Options:
 	const atIdx = nameArg.lastIndexOf("@");
 	if (atIdx === -1) {
 		if (json) {
-			jsonOut({ success: false, command: "pin", error: "Usage: cn pin <name>@<version>" });
+			jsonOut({ success: false, command: "pin", error: "Usage: luuna-beacon pin <name>@<version>" });
 		} else {
-			errorOut("Usage: cn pin <name>@<version>");
+			errorOut("Usage: luuna-beacon pin <name>@<version>");
 		}
 		throw new ExitError(1);
 	}
@@ -97,10 +98,10 @@ Options:
 
 export async function defaultUnpin(args: string[], json: boolean): Promise<void> {
 	const cwd = process.cwd();
-	const promptsPath = join(cwd, ".canopy", "prompts.jsonl");
+	const promptsPath = promptsFile(cwd);
 
 	if (args.includes("--help") || args.includes("-h")) {
-		humanOut(`Usage: cn unpin <name> [options]
+		humanOut(`Usage: luuna-beacon unpin <name> [options]
 
 Options:
   --json    Output as JSON`);
@@ -112,7 +113,7 @@ Options:
 		if (json) {
 			jsonOut({ success: false, command: "unpin", error: "Prompt name required" });
 		} else {
-			errorOut("Usage: cn unpin <name>");
+			errorOut("Usage: luuna-beacon unpin <name>");
 		}
 		throw new ExitError(1);
 	}

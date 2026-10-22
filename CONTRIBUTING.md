@@ -1,14 +1,14 @@
-# Contributing to Canopy
+# Contributing to Luuna Beacon
 
-Thanks for your interest in contributing to Canopy! This guide covers everything you need to get started.
+Thanks for your interest in contributing to Luuna Beacon! This guide covers everything you need to get started.
 
 ## Getting Started
 
 1. **Fork** the repository on GitHub
 2. **Clone** your fork locally:
    ```bash
-   git clone https://github.com/<your-username>/canopy.git
-   cd canopy
+   git clone https://github.com/<your-username>/luuna-beacon.git
+   cd luuna-beacon
    ```
 3. **Install** dependencies:
    ```bash
@@ -38,13 +38,13 @@ bun test               # Run all tests (bun:test)
 bun test src/commands/create.test.ts  # Run a single test file
 ```
 
-There is no build step -- Canopy runs directly from TypeScript source via Bun.
+There is no build step -- Luuna Beacon runs directly from TypeScript source via Bun.
 
 Always run `bun run lint` and `bun test` before submitting a PR.
 
 ## TypeScript Conventions
 
-Canopy is a zero-dependency, ESM-only TypeScript project running on Bun.
+Luuna Beacon is a zero-dependency, ESM-only TypeScript project running on Bun.
 
 ### ESM Imports
 
@@ -80,7 +80,7 @@ describe("my-command", () => {
   let testDir: string;
 
   beforeEach(async () => {
-    testDir = await mkdtemp(join(tmpdir(), "canopy-test-"));
+    testDir = await mkdtemp(join(tmpdir(), "beacon-test-"));
   });
 
   afterEach(async () => {
@@ -120,7 +120,7 @@ Prefix with `fix:`, `feat:`, or `docs:` when the category is clear. Plain descri
 
 ## Reporting Issues
 
-Use [GitHub Issues](https://github.com/jayminwest/canopy/issues) for bug reports and feature requests. For security vulnerabilities, see [SECURITY.md](SECURITY.md).
+Use [GitHub Issues](https://github.com/brodynelly/luuna-beacon/issues) for bug reports and feature requests. For security vulnerabilities, see [SECURITY.md](SECURITY.md).
 
 ## License
 

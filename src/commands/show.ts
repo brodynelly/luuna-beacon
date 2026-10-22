@@ -4,13 +4,14 @@ import { c, errorOut, humanOut, jsonOut } from "../output.ts";
 import { dedupById, getVersions, readJsonl } from "../store.ts";
 import type { Prompt } from "../types.ts";
 import { ExitError } from "../types.ts";
+import { promptsFile } from "../paths.ts";
 
 export default async function show(args: string[], json: boolean): Promise<void> {
 	const cwd = process.cwd();
-	const promptsPath = join(cwd, ".canopy", "prompts.jsonl");
+	const promptsPath = promptsFile(cwd);
 
 	if (args.includes("--help") || args.includes("-h")) {
-		humanOut(`Usage: cn show <name>[@version] [options]
+		humanOut(`Usage: luuna-beacon show <name>[@version] [options]
 
 Options:
   --json    Output as JSON`);
@@ -23,7 +24,7 @@ Options:
 		if (json) {
 			jsonOut({ success: false, command: "show", error: "Prompt name required" });
 		} else {
-			errorOut("Usage: cn show <name>[@version]");
+			errorOut("Usage: luuna-beacon show <name>[@version]");
 		}
 		throw new ExitError(1);
 	}

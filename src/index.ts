@@ -174,7 +174,7 @@ program.on("command:*", (operands) => {
 		if (suggestion) {
 			process.stderr.write(`Did you mean '${suggestion}'?\n`);
 		}
-		process.stderr.write("Run 'cn --help' for usage.\n");
+		process.stderr.write("Run 'luuna-beacon --help' for usage.\n");
 	}
 	process.exitCode = 1;
 });

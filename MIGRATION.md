@@ -13,3 +13,14 @@ Maintainer and release owner: brodynelly. Destination: https://github.com/brodyn
 Visibility: public, explicitly authorized by the owner on October 21, 2026. Luuna remains private. No private authoring records or credential files are included in the extracted history.
 
 The owner requested the explicit luuna-* repository names on October 21, 2026. GitHub repository identity, history and CI are preserved by rename; the canonical destination is brodynelly/luuna-beacon.
+
+# Project layout move, October 22, 2026
+
+Project data moved from the legacy project-root directory to `.luuna/beacon/`. File names and record formats are unchanged.
+
+- Automatic: any command that needs the store renames a legacy directory to `.luuna/beacon/` when the new one is absent (`.luuna/` is created if needed) and rewrites the `.gitattributes`/`.gitignore` lines this tool previously wrote. One notice line is printed to stderr; stdout (JSON) is unaffected.
+- If both the legacy and new directories exist, the command fails with an error asking you to merge or remove the legacy one. Symlinked `.luuna` or legacy directories are refused.
+- The `cn` bin alias was removed; use `luuna-beacon` or `lb`.
+- Onboard markers changed to `luuna-beacon:start/end`; `lb onboard` upgrades existing sections.
+- All legacy names are confined to `src/legacy-layout.ts`.
+- Prompt-record fields `mulch`/`extends_mulch` are now `atlas`/`extends_atlas`, and the `render --json` envelope key follows. Old-key records are normalised on read and rewritten with the new keys only when a new version is appended. The alias logic lives in `src/legacy-layout.ts`.

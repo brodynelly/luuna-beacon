@@ -4,13 +4,14 @@ import { c, errorOut, fmt, humanOut, jsonOut } from "../output.ts";
 import { acquireLock, appendJsonl, dedupById, readJsonl, releaseLock } from "../store.ts";
 import type { Prompt } from "../types.ts";
 import { ExitError } from "../types.ts";
+import { promptsFile } from "../paths.ts";
 
 export default async function update(args: string[], json: boolean): Promise<void> {
 	const cwd = process.cwd();
-	const promptsPath = join(cwd, ".canopy", "prompts.jsonl");
+	const promptsPath = promptsFile(cwd);
 
 	if (args.includes("--help") || args.includes("-h")) {
-		humanOut(`Usage: cn update <name> [options]
+		humanOut(`Usage: luuna-beacon update <name> [options]
 
 Options:
   --name <name>              Rename prompt
@@ -40,7 +41,7 @@ Options:
 		if (json) {
 			jsonOut({ success: false, command: "update", error: "Prompt name required" });
 		} else {
-			errorOut("Usage: cn update <name> [options]");
+			errorOut("Usage: luuna-beacon update <name> [options]");
 		}
 		throw new ExitError(1);
 	}
