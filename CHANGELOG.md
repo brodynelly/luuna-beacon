@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `cn doctor` resolves the project root on Windows, so the `mulch-domains` and `emit-staleness` checks read `.mulch/` and emitted files from the project instead of from inside `.canopy\`.
+- JSONL writes create their temp file beside the target on Windows instead of in the current directory.
+
+### Changed
+- The test suite passes on Windows, and CI runs `bun run verify` on `windows-latest`.
+
 ## [0.2.6] - 2026-06-07
 
 ### Added

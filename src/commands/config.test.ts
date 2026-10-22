@@ -16,7 +16,7 @@ interface ProcResult {
 }
 
 async function run(args: string[], cwd: string): Promise<ProcResult> {
-	const proc = Bun.spawn(["bun", "run", CLI, ...args], {
+	const proc = Bun.spawn([process.execPath, "run", CLI, ...args], {
 		cwd,
 		stdout: "pipe",
 		stderr: "pipe",
