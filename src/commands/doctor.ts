@@ -44,6 +44,12 @@ function readRawLines(filePath: string): RawLine[] {
 	return lines;
 }
 
+// canopyDir is join(cwd, ".canopy"). Strip either separator so the project
+// root also resolves on Windows, where the path uses backslashes.
+function projectRoot(canopyDir: string): string {
+	return canopyDir.replace(/[\\/]\.canopy$/, "");
+}
+
 // 1. config check
 async function checkConfig(canopyDir: string): Promise<DoctorCheck> {
 	const configPath = join(canopyDir, "config.yaml");
@@ -66,7 +72,7 @@ async function checkConfig(canopyDir: string): Promise<DoctorCheck> {
 		};
 	}
 	try {
-		const cwd = canopyDir.replace(/\/.canopy$/, "");
+		const cwd = projectRoot(canopyDir);
 		const config = await loadConfig(cwd);
 		if (!config.project) {
 			return {
@@ -295,7 +301,7 @@ async function checkMulchShape(canopyDir: string): Promise<DoctorCheck> {
 // degrades to a pass/no-op when mulch is absent. The result message labels
 // which mulch config was consulted to disambiguate multi-repo setups.
 async function checkMulchDomains(canopyDir: string): Promise<DoctorCheck> {
-	const cwd = canopyDir.replace(/\/.canopy$/, "");
+	const cwd = projectRoot(canopyDir);
 	const mulchConfigRel = ".mulch/mulch.config.yaml";
 	const mulchConfigPath = join(cwd, mulchConfigRel);
 
@@ -448,7 +454,7 @@ async function checkEmitStaleness(canopyDir: string): Promise<DoctorCheck> {
 		};
 	}
 
-	const cwd = canopyDir.replace(/\/.canopy$/, "");
+	const cwd = projectRoot(canopyDir);
 	const config = await loadConfig(cwd);
 
 	const allRecords = await readJsonl<Prompt>(promptsPath);

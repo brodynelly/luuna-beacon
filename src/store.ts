@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { closeSync, constants, openSync, renameSync, statSync, unlinkSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { LOCK_RETRY_MS, LOCK_STALE_MS, LOCK_TIMEOUT_MS } from "./types.ts";
 
 function lockPath(filePath: string): string {
@@ -70,7 +70,7 @@ export async function readJsonl<T>(filePath: string): Promise<T[]> {
 }
 
 export async function writeJsonl<T>(filePath: string, records: T[]): Promise<void> {
-	const dir = filePath.substring(0, filePath.lastIndexOf("/"));
+	const dir = dirname(filePath);
 	const tmp = join(dir, `.jsonl.tmp.${randomBytes(4).toString("hex")}`);
 
 	const lines = records.map((r) => JSON.stringify(r)).join("\n");
@@ -93,7 +93,7 @@ export async function appendJsonl<T>(filePath: string, record: T): Promise<void>
 
 	const content = existing ? existing + line : line;
 
-	const dir = filePath.substring(0, filePath.lastIndexOf("/"));
+	const dir = dirname(filePath);
 	const tmp = join(dir, `.jsonl.tmp.${randomBytes(4).toString("hex")}`);
 
 	await Bun.write(tmp, content);
