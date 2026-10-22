@@ -61,9 +61,9 @@ describe("luuna-beacon prime", () => {
 			const { stdout } = await captureOutput(() => prime([], false));
 			expect(stdout).toContain("Luuna Beacon Workflow Context");
 			expect(stdout).toContain("Essential Commands");
-			expect(stdout).toContain("lb list");
-			expect(stdout).toContain("lb render");
-			expect(stdout).toContain("lb emit");
+			expect(stdout).toContain("lbc list");
+			expect(stdout).toContain("lbc render");
+			expect(stdout).toContain("lbc emit");
 		} finally {
 			process.chdir(origCwd);
 		}

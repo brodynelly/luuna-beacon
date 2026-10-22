@@ -10,7 +10,7 @@ bun src/index.ts --help
 bun run verify
 ```
 
-The primary executable is `luuna-beacon` with `lb` as its short alias. Direct source execution uses the command above.
+The standalone executable is `luuna-beacon`; `lbc` is the Luuna suite shortcut and `lb` remains a compatibility alias. `luuna beacon <args>` is the equivalent entry through Luuna's installed launcher. In a checkout, install dependencies with the command above and run `bun src/index.ts <args>`. Registry publication is disabled; use the Luuna CLI installer from the main checkout to make the commands available on PATH.
 
 Project data lives in `.luuna/beacon/` (`prompts.jsonl`, `schemas.jsonl`, `config.yaml`). A legacy project directory from earlier layouts is moved there automatically on first use, with a one-line notice on stderr. Luuna consumes a pinned Git submodule and integrates through the CLI/JSON boundary (Atlas also exports a TypeScript library); runtime policy and approvals remain Luuna's responsibility.
 
