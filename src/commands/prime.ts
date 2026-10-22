@@ -78,7 +78,7 @@ function fullContent(): string {
 
 ## Atlas Metadata
 
-Prompts can declare atlas (expertise) dependencies inline. Luuna Beacon stores the declaration as metadata and surfaces it in the render envelope — **lb never shells out to \`luuna-atlas\`**. Consumers (warren, overstory) read the resolved \`atlas\` field and run \`luuna-atlas prime\` themselves.
+Prompts can declare atlas (expertise) dependencies inline. Luuna Beacon stores the declaration as metadata and surfaces it in the render envelope — **lb never shells out to \`luuna-atlas\`**. Consumers (such as the Luuna runtime or an agent orchestrator) read the resolved \`atlas\` field and run \`luuna-atlas prime\` themselves.
 
 Schema fields on a prompt record:
 - \`atlas.prime.domains[]\` — domain names to prime

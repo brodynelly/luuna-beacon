@@ -4,9 +4,9 @@ import { delimiter, join } from "node:path";
 import { appendJsonl } from "../store.ts";
 import type { Prompt } from "../types.ts";
 
-// End-to-end smoke test for warren-style consumption of `luuna-beacon render --json`.
+// End-to-end smoke test for external-consumer-style consumption of `luuna-beacon render --json`.
 // Unlike render.test.ts (which calls renderCmd directly), this spawns the
-// actual luuna-beacon CLI as a subprocess — the same way warren consumes beacon at
+// actual luuna-beacon CLI as a subprocess — the same way an external consumer invokes beacon at
 // run-spawn time — and asserts the envelope contract plus the no-shell-out
 // invariant (acceptance criterion 7 of pl-003f).
 
@@ -68,45 +68,45 @@ afterEach(() => {
 	if (existsSync(tmpDir)) rmSync(tmpDir, { recursive: true });
 });
 
-describe("warren-style smoke: luuna-beacon render --json envelope", () => {
+describe("consumer-style smoke: luuna-beacon render --json envelope", () => {
 	it("returns a stable envelope with atlas field when role declares atlas", async () => {
 		await seed(
 			makePrompt({
 				id: "p-0001",
-				name: "warren-builder",
-				sections: [{ name: "role", body: "Warren builder agent." }],
+				name: "sample-builder",
+				sections: [{ name: "role", body: "Sample builder agent." }],
 				atlas: {
-					prime: { domains: ["beacon", "warren"], files: ["src/**"] },
+					prime: { domains: ["beacon", "backend"], files: ["src/**"] },
 					budget: 8000,
 					on_empty: "warn",
 				},
 			}),
 		);
 
-		const { stdout, exitCode } = await runCli(["render", "warren-builder", "--json"]);
+		const { stdout, exitCode } = await runCli(["render", "sample-builder", "--json"]);
 		expect(exitCode).toBe(0);
 
 		const envelope = JSON.parse(stdout.trim());
 		expect(envelope.success).toBe(true);
 		expect(envelope.command).toBe("render");
-		expect(envelope.name).toBe("warren-builder");
+		expect(envelope.name).toBe("sample-builder");
 		expect(envelope.version).toBe(1);
-		expect(envelope.sections).toEqual([{ name: "role", body: "Warren builder agent." }]);
-		expect(envelope.resolvedFrom).toEqual(["warren-builder"]);
+		expect(envelope.sections).toEqual([{ name: "role", body: "Sample builder agent." }]);
+		expect(envelope.resolvedFrom).toEqual(["sample-builder"]);
 		expect(envelope.frontmatter).toEqual({});
 		expect(envelope.atlas).toEqual({
-			prime: { domains: ["beacon", "warren"], files: ["src/**"] },
+			prime: { domains: ["beacon", "backend"], files: ["src/**"] },
 			budget: 8000,
 			on_empty: "warn",
 		});
 
-		// Warren's downstream consumption: build an `luuna-atlas prime` invocation from
+		// A downstream consumer: build an `luuna-atlas prime` invocation from
 		// the resolved atlas declaration. This asserts the field shape is what
-		// warren actually needs.
+		// a consumer actually needs.
 		const domains = envelope.atlas.prime.domains as string[];
 		const files = envelope.atlas.prime.files as string[];
 		const primeArgs = ["luuna-atlas", "prime", ...domains, "--files", ...files];
-		expect(primeArgs).toEqual(["luuna-atlas", "prime", "beacon", "warren", "--files", "src/**"]);
+		expect(primeArgs).toEqual(["luuna-atlas", "prime", "beacon", "backend", "--files", "src/**"]);
 	});
 
 	it("omits atlas entirely when no role in chain declares one", async () => {
@@ -142,7 +142,7 @@ describe("warren-style smoke: luuna-beacon render --json envelope", () => {
 				extends: "grand",
 				extends_atlas: true,
 				sections: [],
-				atlas: { prime: { domains: ["warren"] }, budget: 2000 },
+				atlas: { prime: { domains: ["backend"] }, budget: 2000 },
 			}),
 		);
 		await seed(
@@ -162,7 +162,7 @@ describe("warren-style smoke: luuna-beacon render --json envelope", () => {
 		const envelope = JSON.parse(stdout.trim());
 		expect(envelope.resolvedFrom).toEqual(["grand", "parent", "child"]);
 		expect(envelope.atlas).toEqual({
-			prime: { domains: ["beacon", "warren"], files: ["src/**"] },
+			prime: { domains: ["beacon", "backend"], files: ["src/**"] },
 			budget: 2000,
 			on_empty: "skip",
 		});
@@ -198,8 +198,8 @@ describe("warren-style smoke: luuna-beacon render --json envelope", () => {
 		await seed(
 			makePrompt({
 				id: "p-0001",
-				name: "warren-builder",
-				sections: [{ name: "role", body: "Warren builder." }],
+				name: "sample-builder",
+				sections: [{ name: "role", body: "Sample builder." }],
 				atlas: { prime: { domains: ["beacon"] }, budget: 5000, on_empty: "warn" },
 			}),
 		);
@@ -223,7 +223,7 @@ exit 0
 			chmodSync(tracer, 0o755);
 		}
 
-		const { stdout, exitCode } = await runCli(["render", "warren-builder", "--json"], traceDir);
+		const { stdout, exitCode } = await runCli(["render", "sample-builder", "--json"], traceDir);
 		expect(exitCode).toBe(0);
 		expect(existsSync(marker)).toBe(false);
 

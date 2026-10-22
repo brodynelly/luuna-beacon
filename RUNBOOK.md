@@ -257,7 +257,7 @@ reproducible installs); it surfaces a warning at install time.
 - Edit the GitHub release notes for `vX.Y.Z` with a banner at the top:
   `> ⚠️ This release contains a regression. Use vX.Y.(Z+1) or later.`
 - File / update `beacon-XXXX` with root cause + remediation links.
-- If a downstream consumer (overstory, warren, sapling) pinned the bad
+- If a downstream consumer (such as the Luuna runtime) pinned the bad
   version, open an issue against that repo recommending the upgrade.
 
 ## Appendix — Common commands

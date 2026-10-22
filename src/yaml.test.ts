@@ -3,8 +3,8 @@ import { parseScalarOrFlow, parseYaml, serializeYaml } from "./yaml.ts";
 
 describe("parseYaml", () => {
 	it("parses basic key-value pairs", () => {
-		const result = parseYaml("project: overstory\nversion: 1\n");
-		expect(result).toEqual({ project: "overstory", version: "1" });
+		const result = parseYaml("project: demo\nversion: 1\n");
+		expect(result).toEqual({ project: "demo", version: "1" });
 	});
 
 	it("handles quoted strings", () => {
@@ -46,9 +46,9 @@ describe("parseYaml", () => {
 
 	it("parses mixed flat and nested keys", () => {
 		const text =
-			"project: overstory\nversion: 1\nemitDir: agents\nemitDirByTag:\n  slash-command: .claude/commands\n  internal: .internal/prompts\n";
+			"project: demo\nversion: 1\nemitDir: agents\nemitDirByTag:\n  slash-command: .claude/commands\n  internal: .internal/prompts\n";
 		const result = parseYaml(text);
-		expect(result.project).toBe("overstory");
+		expect(result.project).toBe("demo");
 		expect(result.version).toBe("1");
 		expect(result.emitDir).toBe("agents");
 		expect(result.emitDirByTag).toEqual({
@@ -113,14 +113,14 @@ describe("serializeYaml", () => {
 
 	it("round-trips nested maps", () => {
 		const original = {
-			project: "overstory",
+			project: "demo",
 			version: "1",
 			emitDir: "agents",
 			emitDirByTag: { "slash-command": ".claude/commands", internal: ".internal/prompts" },
 		};
 		const serialized = serializeYaml(original);
 		const parsed = parseYaml(serialized);
-		expect(parsed.project).toBe("overstory");
+		expect(parsed.project).toBe("demo");
 		expect(parsed.version).toBe("1");
 		expect(parsed.emitDir).toBe("agents");
 		expect(parsed.emitDirByTag).toEqual({

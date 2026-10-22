@@ -150,7 +150,7 @@ describe("Prompt schema round-trip", () => {
 			extends_atlas: true,
 			atlas: {
 				prime: {
-					domains: ["warren", "ecosystem"],
+					domains: ["backend", "ecosystem"],
 					files: ["src/runs/**", ".luuna/missions/**"],
 				},
 				budget: 50000,

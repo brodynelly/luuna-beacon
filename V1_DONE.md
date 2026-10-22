@@ -119,7 +119,7 @@ The tool handles the full prompt lifecycle: create, compose via inheritance, ver
 
 **Inheritance depth**: 5-level limit is hardcoded in render.ts. No production use case has exceeded 3 levels in 176 commits of development. Sufficient for V1.
 
-**Lint from worktrees**: `bun run lint` fails when run from inside `.overstory/` worktrees due to nested biome.json conflicts — this is an ecosystem-wide tooling issue, not a luuna-beacon bug. Lint passes when run from the canonical project root.
+**Lint from worktrees**: `bun run lint` fails when run from inside nested agent worktrees due to nested biome.json conflicts — this is an ecosystem-wide tooling issue, not a luuna-beacon bug. Lint passes when run from the canonical project root.
 
 **TypeScript emit**: Backtick double-escaping edge case (code blocks in prompts emitted as `.ts`) was fixed in v0.2.2.
 

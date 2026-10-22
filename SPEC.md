@@ -9,13 +9,13 @@ Prompts are structured records with composable sections, inheritance, versioning
 Prompt engineering today is unmanaged text files:
 
 - **Monolithic `.md` files** with no internal structure — one bad edit breaks the whole prompt
-- **Copy-paste duplication** across agent definitions (overstory's 7 agent `.md` files share ~60% identical content)
+- **Copy-paste duplication** across agent definitions (a typical set of several agent `.md` files shares ~60% identical content)
 - **No versioning beyond git** — git diffs treat prompts as opaque text, can't answer "what changed in the constraints section between Tuesday and today?"
 - **No validation** — nothing stops you from accidentally deleting a required section
 - **No composition** — changing a shared convention means editing every file that contains it
 - **No audit trail for agent runs** — when agent behavior changes, you can't correlate it to a specific prompt version
 
-Overstory manages 7 agent definitions, 2 templates, and generates per-task overlays. Atlas manages structured expertise. Missions manages issues. But the prompts themselves — the most important input to every agent — are loose files with no tooling.
+Agent orchestrators typically manage a handful of agent definitions and templates and generate per-task overlays. Atlas manages structured expertise. Missions manages issues. But the prompts themselves — the most important input to every agent — are scattered as loose agent-definition files with no tooling.
 
 ## Design Principles
 
@@ -25,13 +25,13 @@ Overstory manages 7 agent definitions, 2 templates, and generates per-task overl
 4. **Git-native.** `merge=union` gitattribute handles parallel branch merges. No custom merge driver needed.
 5. **Prompts are composed, not duplicated.** Sections are the unit of reuse. Inheritance eliminates copy-paste. Change once, propagate everywhere.
 6. **Emit to plain files.** Luuna Beacon is the source of truth; downstream tools consume rendered `.md` files via `luuna-beacon emit`. Adoption is incremental — no tool needs to understand luuna-beacon natively.
-7. **Ecosystem fit.** Same stack as overstory (Bun/TS), same patterns as atlas/missions (JSONL + locks), same CLI conventions (`--json` flag on everything).
+7. **Ecosystem fit.** Same stack as the rest of the Luuna CLIs (Bun/TS), same patterns as atlas/missions (JSONL + locks), same CLI conventions (`--json` flag on everything).
 
 ## On-Disk Format
 
 ```
 .luuna/beacon/
-  config.yaml          # Project config (YAML, matches overstory/atlas/missions convention)
+  config.yaml          # Project config (YAML, matches atlas/missions convention)
   prompts.jsonl        # All prompt records with version history
   schemas.jsonl        # Validation schema definitions
   .gitignore           # Ignores lock files
@@ -40,7 +40,7 @@ Overstory manages 7 agent definitions, 2 templates, and generates per-task overl
 ### config.yaml
 
 ```yaml
-project: overstory
+project: demo
 version: "1"
 targets:
   agents:
@@ -52,7 +52,7 @@ targets:
       - slash-command
 ```
 
-The `project` field is used as the ID prefix (e.g., `overstory-a1b2`). The `targets` section defines named emit targets — each with a directory, an optional `default: true` marker, and optional tags for routing prompts by tag.
+The `project` field is used as the ID prefix (e.g., `demo-a1b2`). The `targets` section defines named emit targets — each with a directory, an optional `default: true` marker, and optional tags for routing prompts by tag.
 
 When `luuna-beacon emit` resolves the output directory for a prompt:
 1. Per-prompt `emitDir` override (if set on the prompt)
@@ -69,8 +69,8 @@ YAML parsed by a minimal built-in parser that handles nested maps, arrays, flat 
 One prompt record per line, append-only for version history. The current state of a prompt is the last line with that ID (dedup-on-read, same as missions). Mutations append a new version rather than overwriting.
 
 ```jsonl
-{"id":"overstory-a1b2","name":"base-agent","version":1,"sections":[{"name":"role","body":"You are an agent in the overstory swarm system.","required":true},{"name":"constraints","body":"- Never push to canonical branch\n- Never spawn sub-workers","required":true}],"tags":["agent","base"],"status":"active","createdAt":"2026-02-22T10:00:00Z","updatedAt":"2026-02-22T10:00:00Z"}
-{"id":"overstory-c3d4","name":"builder","version":1,"sections":[{"name":"role","body":"You are a builder agent. You write code, run tests, and deliver working software."},{"name":"quality-gates","body":"Run bun test, bun run lint, bun run typecheck before closing."}],"extends":"base-agent","tags":["agent","leaf"],"schema":"agent-definition","status":"active","createdAt":"2026-02-22T10:05:00Z","updatedAt":"2026-02-22T10:05:00Z"}
+{"id":"demo-a1b2","name":"base-agent","version":1,"sections":[{"name":"role","body":"You are an agent in a multi-agent system.","required":true},{"name":"constraints","body":"- Never push to canonical branch\n- Never spawn sub-workers","required":true}],"tags":["agent","base"],"status":"active","createdAt":"2026-02-22T10:00:00Z","updatedAt":"2026-02-22T10:00:00Z"}
+{"id":"demo-c3d4","name":"builder","version":1,"sections":[{"name":"role","body":"You are a builder agent. You write code, run tests, and deliver working software."},{"name":"quality-gates","body":"Run bun test, bun run lint, bun run typecheck before closing."}],"extends":"base-agent","tags":["agent","leaf"],"schema":"agent-definition","status":"active","createdAt":"2026-02-22T10:05:00Z","updatedAt":"2026-02-22T10:05:00Z"}
 ```
 
 ### schemas.jsonl
@@ -124,7 +124,7 @@ Section names are freeform strings. Common conventions:
 ```typescript
 interface Prompt {
   // Identity
-  id: string;                // "{project}-{4hex}", e.g. "overstory-a1b2"
+  id: string;                // "{project}-{4hex}", e.g. "demo-a1b2"
   name: string;              // Human-readable, unique across active prompts
 
   // Versioning
@@ -194,7 +194,7 @@ interface Schema {
 
 ### ID Generation
 
-- Prompts: `{project}-{4 random hex chars}` (e.g., `overstory-e7f3`)
+- Prompts: `{project}-{4 random hex chars}` (e.g., `demo-e7f3`)
 - Schemas: `schema-{4 random hex chars}` (e.g., `schema-b2c9`)
 - Collision-checked against existing entries on create
 - Falls back to 8 hex chars after 100 collisions (won't happen in practice)
@@ -283,7 +283,7 @@ Inheritance depth is capped at 5 levels. This is enforced at render time — if 
 
 ## Atlas Metadata
 
-Roles often need specific Luuna Atlas expertise to do their job. Luuna Beacon lets a prompt declare those dependencies inline as part of the role definition, so the declaration travels with the role through inheritance and emit. The declaration is metadata only — **luuna-beacon never shells out to `luuna-atlas`** at render time. Consumers (e.g., warren, overstory) read the resolved `atlas` field from the render envelope and run `luuna-atlas prime` themselves.
+Roles often need specific Luuna Atlas expertise to do their job. Luuna Beacon lets a prompt declare those dependencies inline as part of the role definition, so the declaration travels with the role through inheritance and emit. The declaration is metadata only — **luuna-beacon never shells out to `luuna-atlas`** at render time. Consumers (such as the Luuna runtime or an agent orchestrator) read the resolved `atlas` field from the render envelope and run `luuna-atlas prime` themselves.
 
 ### Schema
 
@@ -369,9 +369,9 @@ This is a typo guard, not a hard gate — luuna-beacon never refuses to render a
 Every `luuna-beacon update` appends a new JSONL line with an incremented version number. The prompts.jsonl file contains the full version history.
 
 ```jsonl
-{"id":"overstory-a1b2","name":"builder","version":1,"sections":[...],...}
-{"id":"overstory-a1b2","name":"builder","version":2,"sections":[...],...}
-{"id":"overstory-a1b2","name":"builder","version":3,"sections":[...],...}
+{"id":"demo-a1b2","name":"builder","version":1,"sections":[...],...}
+{"id":"demo-a1b2","name":"builder","version":2,"sections":[...],...}
+{"id":"demo-a1b2","name":"builder","version":3,"sections":[...],...}
 ```
 
 Current state: last line for each ID (highest version). This is the same dedup-on-read pattern as missions.
@@ -529,7 +529,7 @@ luuna-beacon import <path>                       Import an existing .md file as 
 
 Success:
 ```json
-{ "success": true, "command": "create", "id": "overstory-a1b2", "name": "builder" }
+{ "success": true, "command": "create", "id": "demo-a1b2", "name": "builder" }
 ```
 
 Error:
@@ -567,10 +567,10 @@ Diff:
 
 ## Config Management
 
-`.luuna/beacon/config.yaml` is a small structured surface — `project`, `version`, and the nested `targets` map for named emit targets. Luuna Beacon publishes a JSON Schema describing the canonical shape so external UIs (warren V2's per-tool config editor) can render forms automatically and write back through per-knob CLI commands. The surface mirrors `luuna-missions config` and `luuna-atlas config` so a single warren wire contract works across all three primitive CLIs.
+`.luuna/beacon/config.yaml` is a small structured surface — `project`, `version`, and the nested `targets` map for named emit targets. Luuna Beacon publishes a JSON Schema describing the canonical shape so external UIs (a per-tool config editor) can render forms automatically and write back through per-knob CLI commands. The surface mirrors `luuna-missions config` and `luuna-atlas config` so a single wire contract works across all three primitive CLIs.
 
 ```bash
-# Emit the schema (warren reads this once, renders a form)
+# Emit the schema (a UI reads this once, renders a form)
 luuna-beacon config schema --json
 
 # Read the whole config or a specific dot-path
@@ -673,17 +673,17 @@ Content before the first `##` heading becomes a section named `intro`. Headings 
 
 Without `--split`, the entire file becomes a single section named `body`.
 
-## Integration with Overstory
+## Integration with Agent Orchestrators
 
 ### Prompt Source
 
-Overstory's overlay generator (`src/agents/overlay.ts`) currently reads raw `.md` files from the `agents/` directory. With luuna-beacon, two integration paths:
+An agent orchestrator's overlay generator typically reads raw `.md` files from the `agents/` directory. With luuna-beacon, two integration paths:
 
-**Path 1 (zero coupling):** Use `luuna-beacon emit --all --out-dir agents/` as a build step. Overstory reads `.md` files as before. Luuna Beacon is invisible to overstory.
+**Path 1 (zero coupling):** Use `luuna-beacon emit --all --out-dir agents/` as a build step. The orchestrator reads `.md` files as before. Luuna Beacon is invisible to it.
 
-**Path 2 (native integration):** Overstory wraps luuna-beacon via `Bun.spawn(["luuna-beacon", ...])` with `--json` parsing, same as missions/atlas:
+**Path 2 (native integration):** The orchestrator wraps luuna-beacon via `Bun.spawn(["luuna-beacon", ...])` with `--json` parsing, same as missions/atlas:
 
-| Overstory operation | luuna-beacon command |
+| Orchestrator operation | luuna-beacon command |
 |--------------------|------------|
 | Load agent definition | `luuna-beacon render <name> --format md` |
 | Check prompt version | `luuna-beacon show <name> --json` |
@@ -700,9 +700,9 @@ Agents don't interact with luuna-beacon directly. They receive rendered prompts 
 
 Atlas expertise records often describe prompt conventions ("agent definitions should include four behavioral sections"). Luuna Beacon schemas can codify these conventions as enforceable rules rather than prose.
 
-In addition, prompts can declare which atlas domains and file globs a role depends on via the `atlas:` block (see "Atlas Metadata"). The declaration is metadata only — luuna-beacon emits it through the render envelope and consumers (e.g., warren, overstory) call `luuna-atlas prime` themselves at run-spawn time. Luuna Beacon never shells out to `luuna-atlas`.
+In addition, prompts can declare which atlas domains and file globs a role depends on via the `atlas:` block (see "Atlas Metadata"). The declaration is metadata only — luuna-beacon emits it through the render envelope and consumers (such as the Luuna runtime or an agent orchestrator) call `luuna-atlas prime` themselves at run-spawn time. Luuna Beacon never shells out to `luuna-atlas`.
 
-## Standalone Value (Outside Overstory)
+## Standalone Value (Outside an Orchestrator)
 
 Luuna Beacon is useful for anyone managing prompts:
 
@@ -731,7 +731,7 @@ Explicitly out of scope (keep it minimal):
 
 | Concern | Choice | Rationale |
 |---------|--------|-----------|
-| Runtime | Bun | Matches overstory/missions/atlas, runs TS directly |
+| Runtime | Bun | Matches missions/atlas, runs TS directly |
 | Language | TypeScript (strict) | Matches ecosystem |
 | Dependencies | `chalk`, `commander`, `ajv` | Minimal — ajv added in 0.2.5 for `luuna-beacon config` schema validation |
 | Config | YAML (minimal built-in parser) | Matches ecosystem convention |
@@ -769,7 +769,7 @@ luuna-beacon/
     store.ts                  # JSONL read/write/lock/atomic
     id.ts                     # ID generation
     config.ts                 # YAML config load/save
-    config-schema.ts          # JSON Schema for .luuna/beacon/config.yaml (warren wire contract)
+    config-schema.ts          # JSON Schema for .luuna/beacon/config.yaml (config UI wire contract)
     output.ts                 # JSON + human output helpers
     yaml.ts                   # Minimal YAML parser (flat key-value only)
     render.ts                 # Inheritance resolution + section composition
@@ -845,7 +845,7 @@ Script updates both files atomically and prints next steps.
 
 ### /release Slash Command
 
-`.claude/commands/release.md` -- identical workflow to overstory/missions:
+`.claude/commands/release.md` -- identical workflow to the missions CLI:
 
 1. Analyze changes since last release (`git log`, `git diff`)
 2. Determine version bump (major/minor/patch, default: patch)

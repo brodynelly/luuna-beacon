@@ -18,7 +18,7 @@ describe("configSchema", () => {
 		expect(Object.keys(defs)).toEqual(["EmitTarget"]);
 	});
 
-	it("golden: schema property keys are stable (warren wire format)", () => {
+	it("golden: schema property keys are stable (external consumer wire format)", () => {
 		const schema = configSchema();
 		const props = schema.properties as Record<string, Record<string, unknown>>;
 

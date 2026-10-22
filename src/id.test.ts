@@ -3,8 +3,8 @@ import { generateId } from "./id.ts";
 
 describe("generateId", () => {
 	it("generates id with prefix", () => {
-		const id = generateId("overstory", []);
-		expect(id).toMatch(/^overstory-[0-9a-f]{4}$/);
+		const id = generateId("demo", []);
+		expect(id).toMatch(/^demo-[0-9a-f]{4}$/);
 	});
 
 	it("generates id with schema prefix", () => {
