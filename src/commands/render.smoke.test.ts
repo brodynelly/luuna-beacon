@@ -40,7 +40,10 @@ async function runCn(args: string[], pathPrefix?: string): Promise<CnResult> {
 		if (typeof v === "string") env[k] = v;
 	}
 	if (pathPrefix) {
-		env.PATH = `${pathPrefix}${delimiter}${env.PATH ?? ""}`;
+		// Windows environments often spell it `Path`; extend the existing key
+		// rather than adding a second, prefix-only `PATH`.
+		const key = Object.keys(env).find((k) => k.toUpperCase() === "PATH") ?? "PATH";
+		env[key] = `${pathPrefix}${delimiter}${env[key] ?? ""}`;
 	}
 	const proc = Bun.spawn(["bun", cnEntry, ...args], {
 		cwd: tmpDir,
