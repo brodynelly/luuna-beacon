@@ -493,7 +493,7 @@ describe("cn emit routing integration", () => {
 
 			const cmdFile = parsed.files.find((f: { name: string }) => f.name === "cmd-a");
 			const agentFile = parsed.files.find((f: { name: string }) => f.name === "agent-a");
-			expect(cmdFile.path).toContain(".claude/commands");
+			expect(cmdFile.path).toContain(join(".claude", "commands"));
 			expect(agentFile.path).toContain("agents");
 		} finally {
 			process.chdir(origCwd);

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { chmodSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { delimiter, join } from "node:path";
 import { appendJsonl } from "../store.ts";
 import type { Prompt } from "../types.ts";
 
@@ -40,7 +40,7 @@ async function runCn(args: string[], pathPrefix?: string): Promise<CnResult> {
 		if (typeof v === "string") env[k] = v;
 	}
 	if (pathPrefix) {
-		env.PATH = `${pathPrefix}:${env.PATH ?? ""}`;
+		env.PATH = `${pathPrefix}${delimiter}${env.PATH ?? ""}`;
 	}
 	const proc = Bun.spawn(["bun", cnEntry, ...args], {
 		cwd: tmpDir,
@@ -207,9 +207,14 @@ describe("warren-style smoke: cn render --json envelope", () => {
 		const traceDir = join(tmpDir, ".trace");
 		mkdirSync(traceDir, { recursive: true });
 		const marker = join(traceDir, "ml-was-called");
-		const tracer = join(traceDir, "ml");
-		writeFileSync(tracer, `#!/bin/sh\necho "$@" >> ${JSON.stringify(marker)}\nexit 0\n`);
-		Bun.spawnSync(["chmod", "+x", tracer]);
+		if (process.platform === "win32") {
+			// Windows cannot exec a shebang script; PATHEXT finds a .cmd shim.
+			writeFileSync(join(traceDir, "ml.cmd"), `@echo %* >> "${marker}"\r\n`);
+		} else {
+			const tracer = join(traceDir, "ml");
+			writeFileSync(tracer, `#!/bin/sh\necho "$@" >> ${JSON.stringify(marker)}\nexit 0\n`);
+			chmodSync(tracer, 0o755);
+		}
 
 		const { stdout, exitCode } = await runCn(["render", "warren-builder", "--json"], traceDir);
 		expect(exitCode).toBe(0);

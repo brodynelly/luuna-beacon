@@ -15,7 +15,11 @@ const REPO_ROOT = resolve(import.meta.dir, "..");
 describe("generate-cli-docs", () => {
 	test("docs/cli-reference.md is in sync with src/index.ts", async () => {
 		const { content } = await generate();
-		const onDisk = readFileSync(resolve(REPO_ROOT, "docs/cli-reference.md"), "utf8");
+		// A Windows checkout with core.autocrlf may hold the doc with CRLF.
+		const onDisk = readFileSync(resolve(REPO_ROOT, "docs/cli-reference.md"), "utf8").replace(
+			/\r\n/g,
+			"\n",
+		);
 		expect(onDisk).toBe(content);
 	});
 
