@@ -7,15 +7,37 @@ This page enumerates every subcommand registered by Luuna Beacon's `luuna-beacon
 
 To refresh: `bun run gen:docs`. To check (CI mode): `bun run gen:docs:check`.
 
-Total commands: **24**.
+Total commands: **60**.
 
 ## Index
 
 | Command | Description |
 | --- | --- |
+| [`agent`](#agent) | Manage versioned agent artifacts |
+| [`agent export`](#agent-export) | Reconstruct a agent from its stored version |
+| [`agent history`](#agent-history) | List all stored versions of a agent |
+| [`agent import`](#agent-import) | Capture a complete agent from a local source |
+| [`agent list`](#agent-list) | List stored agent artifacts |
+| [`agent read`](#agent-read) | Read one embedded file from a agent |
+| [`agent show`](#agent-show) | Show a agent version and its stored files |
+| [`agent update`](#agent-update) | Capture a new agent version from a local source |
+| [`agent verify`](#agent-verify) | Verify stored agent content and hashes |
 | [`archive`](#archive) | Archive a prompt |
+| [`bundle`](#bundle) | Manage versioned bundle artifacts |
+| [`bundle export`](#bundle-export) | Reconstruct a bundle from its stored version |
+| [`bundle history`](#bundle-history) | List all stored versions of a bundle |
+| [`bundle import`](#bundle-import) | Capture a complete bundle from a local source |
+| [`bundle list`](#bundle-list) | List stored bundle artifacts |
+| [`bundle read`](#bundle-read) | Read one embedded file from a bundle |
+| [`bundle show`](#bundle-show) | Show a bundle version and its stored files |
+| [`bundle update`](#bundle-update) | Capture a new bundle version from a local source |
+| [`bundle verify`](#bundle-verify) | Verify stored bundle content and hashes |
 | [`completions`](#completions) | Generate shell completions |
 | [`config`](#config) | Read, write, and inspect .luuna/beacon/config.yaml |
+| [`config schema`](#config-schema) | Emit the JSON Schema for .luuna/beacon/config.yaml |
+| [`config set`](#config-set) | Set a config value at <path>; <value> is YAML-parsed |
+| [`config show`](#config-show) | Print the current config (or a value at --path) |
+| [`config unset`](#config-unset) | Remove the config value at <path> |
 | [`create`](#create) | Create a new prompt |
 | [`diff`](#diff) | Section-aware diff between two prompt versions |
 | [`doctor`](#doctor) | Check project health and data integrity |
@@ -29,7 +51,21 @@ Total commands: **24**.
 | [`prime`](#prime) | Output workflow context for AI agents |
 | [`render`](#render) | Render full prompt (resolve inheritance) |
 | [`schema`](#schema) | Schema management (create, show, list, rule add) |
+| [`schema create`](#schema-create) | Create a validation schema |
+| [`schema list`](#schema-list) | List all schemas |
+| [`schema rule`](#schema-rule) | Schema rule management |
+| [`schema rule add`](#schema-rule-add) | Add a validation rule to a schema |
+| [`schema show`](#schema-show) | Show schema details |
 | [`show`](#show) | Show prompt record |
+| [`skill`](#skill) | Manage versioned skill artifacts |
+| [`skill export`](#skill-export) | Reconstruct a skill from its stored version |
+| [`skill history`](#skill-history) | List all stored versions of a skill |
+| [`skill import`](#skill-import) | Capture a complete skill from a local source |
+| [`skill list`](#skill-list) | List stored skill artifacts |
+| [`skill read`](#skill-read) | Read one embedded file from a skill |
+| [`skill show`](#skill-show) | Show a skill version and its stored files |
+| [`skill update`](#skill-update) | Capture a new skill version from a local source |
+| [`skill verify`](#skill-verify) | Verify stored skill content and hashes |
 | [`stats`](#stats) | Show prompt statistics |
 | [`sync`](#sync) | Stage and commit .luuna/beacon/ changes |
 | [`tree`](#tree) | Show inheritance tree for a prompt |
@@ -37,6 +73,136 @@ Total commands: **24**.
 | [`update`](#update) | Update a prompt (creates new version) |
 | [`upgrade`](#upgrade) | Upgrade Luuna Beacon after publication from npm |
 | [`validate`](#validate) | Validate a prompt against its schema |
+
+## agent
+
+Manage versioned agent artifacts
+
+```bash
+luuna-beacon agent
+```
+
+## agent export
+
+Reconstruct a agent from its stored version
+
+```bash
+luuna-beacon agent export <name> [options]
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `name` | yes |  |
+
+**Options:**
+
+| Flags | Description |
+| --- | --- |
+| `--out <path>` | Explicit destination file or directory |
+| `--target <target>` | Host layout: claude or codex where supported |
+| `--force` | Replace an existing destination |
+
+## agent history
+
+List all stored versions of a agent
+
+```bash
+luuna-beacon agent history <name>
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `name` | yes |  |
+
+## agent import
+
+Capture a complete agent from a local source
+
+```bash
+luuna-beacon agent import <path> [options]
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `path` | yes |  |
+
+**Options:**
+
+| Flags | Description |
+| --- | --- |
+| `--name <name>` | Artifact name |
+
+## agent list
+
+List stored agent artifacts
+
+```bash
+luuna-beacon agent list
+```
+
+## agent read
+
+Read one embedded file from a agent
+
+```bash
+luuna-beacon agent read <name> <file>
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `name` | yes |  |
+| `file` | yes |  |
+
+## agent show
+
+Show a agent version and its stored files
+
+```bash
+luuna-beacon agent show <name>
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `name` | yes |  |
+
+## agent update
+
+Capture a new agent version from a local source
+
+```bash
+luuna-beacon agent update <name> <path>
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `name` | yes |  |
+| `path` | yes |  |
+
+## agent verify
+
+Verify stored agent content and hashes
+
+```bash
+luuna-beacon agent verify [name]
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `name` | no |  |
 
 ## archive
 
@@ -51,6 +217,136 @@ luuna-beacon archive <name>
 | Name | Required | Description |
 | --- | --- | --- |
 | `name` | yes | Prompt name |
+
+## bundle
+
+Manage versioned bundle artifacts
+
+```bash
+luuna-beacon bundle
+```
+
+## bundle export
+
+Reconstruct a bundle from its stored version
+
+```bash
+luuna-beacon bundle export <name> [options]
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `name` | yes |  |
+
+**Options:**
+
+| Flags | Description |
+| --- | --- |
+| `--out <path>` | Explicit destination file or directory |
+| `--target <target>` | Host layout: claude or codex where supported |
+| `--force` | Replace an existing destination |
+
+## bundle history
+
+List all stored versions of a bundle
+
+```bash
+luuna-beacon bundle history <name>
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `name` | yes |  |
+
+## bundle import
+
+Capture a complete bundle from a local source
+
+```bash
+luuna-beacon bundle import <path> [options]
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `path` | yes |  |
+
+**Options:**
+
+| Flags | Description |
+| --- | --- |
+| `--name <name>` | Artifact name |
+
+## bundle list
+
+List stored bundle artifacts
+
+```bash
+luuna-beacon bundle list
+```
+
+## bundle read
+
+Read one embedded file from a bundle
+
+```bash
+luuna-beacon bundle read <name> <file>
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `name` | yes |  |
+| `file` | yes |  |
+
+## bundle show
+
+Show a bundle version and its stored files
+
+```bash
+luuna-beacon bundle show <name>
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `name` | yes |  |
+
+## bundle update
+
+Capture a new bundle version from a local source
+
+```bash
+luuna-beacon bundle update <name> <path>
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `name` | yes |  |
+| `path` | yes |  |
+
+## bundle verify
+
+Verify stored bundle content and hashes
+
+```bash
+luuna-beacon bundle verify [name]
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `name` | no |  |
 
 ## completions
 
@@ -73,6 +369,76 @@ Read, write, and inspect .luuna/beacon/config.yaml
 ```bash
 luuna-beacon config
 ```
+
+## config schema
+
+Emit the JSON Schema for .luuna/beacon/config.yaml
+
+```bash
+luuna-beacon config schema [options]
+```
+
+**Options:**
+
+| Flags | Description |
+| --- | --- |
+| `--json` | Compact single-line JSON (default is pretty-printed) |
+
+## config set
+
+Set a config value at <path>; <value> is YAML-parsed
+
+```bash
+luuna-beacon config set <path> <value> [options]
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `path` | yes |  |
+| `value` | yes |  |
+
+**Options:**
+
+| Flags | Description |
+| --- | --- |
+| `--json` | Output as JSON |
+
+## config show
+
+Print the current config (or a value at --path)
+
+```bash
+luuna-beacon config show [options]
+```
+
+**Options:**
+
+| Flags | Description |
+| --- | --- |
+| `--path <path>` | Dot-path to read (e.g. targets.default.dir) |
+| `--json` | Output as JSON |
+
+## config unset
+
+Remove the config value at <path>
+
+```bash
+luuna-beacon config unset <path> [options]
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `path` | yes |  |
+
+**Options:**
+
+| Flags | Description |
+| --- | --- |
+| `--json` | Output as JSON |
 
 ## create
 
@@ -293,6 +659,74 @@ Schema management (create, show, list, rule add)
 luuna-beacon schema
 ```
 
+## schema create
+
+Create a validation schema
+
+```bash
+luuna-beacon schema create [options]
+```
+
+**Options:**
+
+| Flags | Description |
+| --- | --- |
+| `--name <name>` | Schema name |
+| `--required <sections>` | Required sections (comma-separated, repeatable) |
+| `--optional <sections>` | Optional sections (comma-separated, repeatable) |
+
+## schema list
+
+List all schemas
+
+```bash
+luuna-beacon schema list
+```
+
+## schema rule
+
+Schema rule management
+
+```bash
+luuna-beacon schema rule
+```
+
+## schema rule add
+
+Add a validation rule to a schema
+
+```bash
+luuna-beacon schema rule add <schema> [options]
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `schema` | yes | Schema name |
+
+**Options:**
+
+| Flags | Description |
+| --- | --- |
+| `--section <name>` | Section to validate |
+| `--pattern <regex>` | Regex pattern that must match |
+| `--message <text>` | Error message if validation fails |
+
+## schema show
+
+Show schema details
+
+```bash
+luuna-beacon schema show <name>
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `name` | yes | Schema name |
+
 ## show
 
 Show prompt record
@@ -306,6 +740,136 @@ luuna-beacon show <name>
 | Name | Required | Description |
 | --- | --- | --- |
 | `name` | yes | Prompt name (name[@version]) |
+
+## skill
+
+Manage versioned skill artifacts
+
+```bash
+luuna-beacon skill
+```
+
+## skill export
+
+Reconstruct a skill from its stored version
+
+```bash
+luuna-beacon skill export <name> [options]
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `name` | yes |  |
+
+**Options:**
+
+| Flags | Description |
+| --- | --- |
+| `--out <path>` | Explicit destination file or directory |
+| `--target <target>` | Host layout: claude or codex where supported |
+| `--force` | Replace an existing destination |
+
+## skill history
+
+List all stored versions of a skill
+
+```bash
+luuna-beacon skill history <name>
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `name` | yes |  |
+
+## skill import
+
+Capture a complete skill from a local source
+
+```bash
+luuna-beacon skill import <path> [options]
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `path` | yes |  |
+
+**Options:**
+
+| Flags | Description |
+| --- | --- |
+| `--name <name>` | Artifact name |
+
+## skill list
+
+List stored skill artifacts
+
+```bash
+luuna-beacon skill list
+```
+
+## skill read
+
+Read one embedded file from a skill
+
+```bash
+luuna-beacon skill read <name> <file>
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `name` | yes |  |
+| `file` | yes |  |
+
+## skill show
+
+Show a skill version and its stored files
+
+```bash
+luuna-beacon skill show <name>
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `name` | yes |  |
+
+## skill update
+
+Capture a new skill version from a local source
+
+```bash
+luuna-beacon skill update <name> <path>
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `name` | yes |  |
+| `path` | yes |  |
+
+## skill verify
+
+Verify stored skill content and hashes
+
+```bash
+luuna-beacon skill verify [name]
+```
+
+**Arguments:**
+
+| Name | Required | Description |
+| --- | --- | --- |
+| `name` | no |  |
 
 ## stats
 

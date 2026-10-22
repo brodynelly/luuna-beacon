@@ -44,10 +44,11 @@ Initializes .luuna/beacon/ in the current directory with config and empty JSONL 
 	// Create empty JSONL files
 	await Bun.write(join(dataDir, "prompts.jsonl"), "");
 	await Bun.write(join(dataDir, "schemas.jsonl"), "");
+	await Bun.write(join(dataDir, "artifacts.jsonl"), "");
 
 	// Append .gitattributes to project root
 	const gitattrsPath = join(cwd, ".gitattributes");
-	const gitattrsEntry = ".luuna/beacon/prompts.jsonl merge=union\n.luuna/beacon/schemas.jsonl merge=union\n";
+	const gitattrsEntry = ".luuna/beacon/prompts.jsonl merge=union\n.luuna/beacon/schemas.jsonl merge=union\n.luuna/beacon/artifacts.jsonl merge=union\n";
 
 	let existing = "";
 	try {
@@ -58,6 +59,8 @@ Initializes .luuna/beacon/ in the current directory with config and empty JSONL 
 
 	if (!existing.includes(".luuna/beacon/prompts.jsonl")) {
 		await Bun.write(gitattrsPath, existing + gitattrsEntry);
+	} else if (!existing.includes(".luuna/beacon/artifacts.jsonl")) {
+		await Bun.write(gitattrsPath, `${existing}${existing.endsWith("\n") ? "" : "\n"}.luuna/beacon/artifacts.jsonl merge=union\n`);
 	}
 
 	if (json) {
@@ -67,6 +70,7 @@ Initializes .luuna/beacon/ in the current directory with config and empty JSONL 
 		humanOut("  config.yaml: project=luuna-beacon, targets: default → agents/");
 		humanOut("  prompts.jsonl created");
 		humanOut("  schemas.jsonl created");
+		humanOut("  artifacts.jsonl created");
 		humanOut("  .gitattributes updated with merge=union");
 	}
 }

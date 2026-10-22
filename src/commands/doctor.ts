@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync, statSync, unlinkSync } from "nod
 import { join, resolve } from "node:path";
 import chalk from "chalk";
 import type { Command } from "commander";
+import { readArtifacts } from "../artifacts.ts";
 import { loadConfig } from "../config.ts";
 import { beaconDir } from "../paths.ts";
 import { humanOut, jsonOut, palette } from "../output.ts";
@@ -26,6 +27,27 @@ interface RawLine {
 	text: string;
 	parsed?: unknown;
 	error?: string;
+}
+
+async function checkArtifactsIntegrity(cwd: string): Promise<DoctorCheck> {
+	try {
+		const records = await readArtifacts(cwd);
+		return {
+			name: "artifacts-integrity",
+			status: "pass",
+			message: `${records.length} stored artifact version(s) verified`,
+			details: [],
+			fixable: false,
+		};
+	} catch (error) {
+		return {
+			name: "artifacts-integrity",
+			status: "fail",
+			message: "Artifact store is invalid",
+			details: [error instanceof Error ? error.message : String(error)],
+			fixable: false,
+		};
+	}
 }
 
 function readRawLines(filePath: string): RawLine[] {
@@ -684,6 +706,7 @@ export async function run(fix: boolean, verbose: boolean, json: boolean): Promis
 	// 2-3. JSONL integrity
 	checks.push(checkPromptsIntegrity(dataDir));
 	checks.push(checkSchemasIntegrity(dataDir));
+	checks.push(await checkArtifactsIntegrity(cwd));
 
 	// 4. schema validation
 	checks.push(await checkSchemaValidation(dataDir));
@@ -719,6 +742,7 @@ export async function run(fix: boolean, verbose: boolean, json: boolean): Promis
 			if (reConfig.status !== "fail") {
 				reChecks.push(checkPromptsIntegrity(dataDir));
 				reChecks.push(checkSchemasIntegrity(dataDir));
+				reChecks.push(await checkArtifactsIntegrity(cwd));
 				reChecks.push(await checkSchemaValidation(dataDir));
 				reChecks.push(await checkAtlasShape(dataDir));
 				reChecks.push(await checkAtlasDomains(dataDir));

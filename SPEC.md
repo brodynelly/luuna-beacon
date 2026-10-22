@@ -34,6 +34,7 @@ Agent orchestrators typically manage a handful of agent definitions and template
   config.yaml          # Project config (YAML, matches atlas/missions convention)
   prompts.jsonl        # All prompt records with version history
   schemas.jsonl        # Validation schema definitions
+  artifacts.jsonl      # Complete skill, agent, and plugin bundle versions
   .gitignore           # Ignores lock files
 ```
 
@@ -81,6 +82,12 @@ Validation schema definitions, one per line:
 {"id":"schema-a1b2","name":"agent-definition","requiredSections":["role","constraints","workflow"],"optionalSections":["capabilities","communication","quality-gates","failure-modes"],"rules":[{"section":"constraints","pattern":"Never push","message":"Agent constraints must include push restriction"}],"createdAt":"2026-02-22T10:00:00Z","updatedAt":"2026-02-22T10:00:00Z"}
 ```
 
+### artifacts.jsonl
+
+Each line is one immutable, complete version of a `skill`, `agent`, or `bundle`. Files are embedded as UTF-8 text or base64, with their package-relative path, executable bit, and SHA-256 digest. The source filesystem path is not retained. A manifest digest covers the ordered path, digest, and executable metadata. Importing unchanged content returns the current version. On read, malformed lines and divergent records sharing a kind, name, and version fail explicitly. Existing prompt and schema record formats are unchanged.
+
+`skill` requires `SKILL.md` at the root, `agent` captures one Markdown definition as `AGENT.md`, and `bundle` requires a Claude plugin manifest at `.claude-plugin/plugin.json`. Export reconstructs the stored files, with host layout shortcuts for Claude skills and agents and Codex skills. Export does not activate a plugin or grant tool permissions. Imports are limited to 256 files, 4 MiB per file, and 8 MiB total; symlinks, generated dependency directories, and credential-like files are rejected.
+
 ### .gitignore
 
 ```
@@ -92,6 +99,7 @@ Validation schema definitions, one per line:
 ```
 .luuna/beacon/prompts.jsonl merge=union
 .luuna/beacon/schemas.jsonl merge=union
+.luuna/beacon/artifacts.jsonl merge=union
 ```
 
 Union merge strategy: on branch merge, git takes lines from both sides. Since each record is one line with a unique ID, this produces correct results for parallel work. Duplicate lines (same prompt modified on both branches) are handled by luuna-beacon's dedup-on-read — last occurrence wins (highest version number for same ID).

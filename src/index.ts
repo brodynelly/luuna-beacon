@@ -98,6 +98,7 @@ const { registerPinCommand } = await import("./commands/pin.ts");
 const { registerDoctorCommand } = await import("./commands/doctor.ts");
 const { registerUpgradeCommand } = await import("./commands/upgrade.ts");
 const { registerCompletionsCommand } = await import("./commands/completions.ts");
+const { registerArtifactCommands } = await import("./commands/artifact.ts");
 
 registerInitCommand(program);
 registerShowCommand(program);
@@ -122,6 +123,7 @@ registerPinCommand(program); // registers both pin and unpin
 registerDoctorCommand(program);
 registerUpgradeCommand(program);
 registerCompletionsCommand(program);
+registerArtifactCommands(program);
 
 // --- Typo suggestions via Levenshtein distance ---
 
@@ -179,30 +181,22 @@ program.on("command:*", (operands) => {
 	process.exitCode = 1;
 });
 
-program
-	.parseAsync(process.argv)
-	.then(() => {
-		if (program.opts().timing) {
-			const elapsed = Math.round(performance.now() - t0);
-			process.stderr.write(`[timing] ${elapsed}ms\n`);
-		}
-	})
-	.catch((err: unknown) => {
-		if (program.opts().timing) {
-			const elapsed = Math.round(performance.now() - t0);
-			process.stderr.write(`[timing] ${elapsed}ms\n`);
-		}
-		if (err instanceof ExitError) {
-			process.exitCode = err.exitCode;
-			return;
-		}
+try {
+	await program.parseAsync(process.argv);
+} catch (err: unknown) {
+	if (err instanceof ExitError) {
+		process.exitCode = err.exitCode;
+	} else {
 		const msg = err instanceof Error ? err.message : String(err);
 		const command = process.argv[2] ?? "";
 		const json = isJsonMode(process.argv.slice(2));
-		if (json) {
-			jsonOut({ success: false, command, error: msg });
-		} else {
-			errorOut(`Error: ${msg}`);
-		}
+		if (json) jsonOut({ success: false, command, error: msg });
+		else errorOut(`Error: ${msg}`);
 		process.exitCode = 1;
-	});
+	}
+} finally {
+	if (program.opts().timing) {
+		const elapsed = Math.round(performance.now() - t0);
+		process.stderr.write(`[timing] ${elapsed}ms\n`);
+	}
+}

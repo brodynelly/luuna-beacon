@@ -304,6 +304,24 @@ export const COMMANDS: readonly CommandDef[] = [
 		desc: "Generate shell completions",
 		flags: [{ name: "--help", desc: "Show help" }],
 	},
+	...(["skill", "agent", "bundle"] as const).map((name) => ({
+		name,
+		desc: `Manage versioned ${name} artifacts`,
+		subcommands: [
+			{ name: "import", desc: "Capture a complete artifact", flags: [{ name: "--name", desc: "Artifact name", takesValue: true }] },
+			{ name: "update", desc: "Capture a new version" },
+			{ name: "list", desc: "List artifacts" },
+			{ name: "show", desc: "Show a version and its files" },
+			{ name: "history", desc: "List versions" },
+			{ name: "read", desc: "Read one embedded file" },
+			{ name: "verify", desc: "Verify stored content" },
+			{ name: "export", desc: "Reconstruct stored files", flags: [
+				{ name: "--out", desc: "Destination path", takesValue: true },
+				{ name: "--target", desc: "Host layout", takesValue: true, values: ["claude", "codex"] },
+				{ name: "--force", desc: "Replace a managed export" },
+			] },
+		],
+	})),
 ] as const;
 
 const BIN = "luuna-beacon";
