@@ -85,6 +85,7 @@ export async function buildProgram(): Promise<Command> {
 	const { registerDoctorCommand } = await import("../src/commands/doctor.ts");
 	const { registerUpgradeCommand } = await import("../src/commands/upgrade.ts");
 	const { registerCompletionsCommand } = await import("../src/commands/completions.ts");
+	const { registerArtifactCommands } = await import("../src/commands/artifact.ts");
 
 	registerInitCommand(program);
 	registerShowCommand(program);
@@ -109,6 +110,7 @@ export async function buildProgram(): Promise<Command> {
 	registerDoctorCommand(program);
 	registerUpgradeCommand(program);
 	registerCompletionsCommand(program);
+	registerArtifactCommands(program);
 
 	return program;
 }
@@ -132,9 +134,16 @@ export function summarizeCommand(cmd: Command): CommandSummary {
 }
 
 export function summarizeProgram(program: Command): CommandSummary[] {
-	return program.commands
-		.map((cmd) => summarizeCommand(cmd))
-		.sort((a, b) => a.name.localeCompare(b.name));
+	const summaries: CommandSummary[] = [];
+	function visit(command: Command, prefix: string): void {
+		for (const child of command.commands) {
+			const name = `${prefix}${child.name()}`;
+			summaries.push({ ...summarizeCommand(child), name });
+			visit(child, `${name} `);
+		}
+	}
+	visit(program, "");
+	return summaries.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 function escapeCell(text: string): string {
@@ -172,7 +181,7 @@ export function renderMarkdown(summaries: readonly CommandSummary[]): string {
 	sections.push("| Command | Description |");
 	sections.push("| --- | --- |");
 	for (const summary of summaries) {
-		const anchor = summary.name.toLowerCase();
+		const anchor = summary.name.toLowerCase().replace(/\s+/g, "-");
 		sections.push(`| [\`${summary.name}\`](#${anchor}) | ${escapeCell(summary.description)} |`);
 	}
 	sections.push("");
