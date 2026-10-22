@@ -10,25 +10,25 @@ function onboardSnippet(): string {
 	return `## Prompt Management (Luuna Beacon)
 ${VERSION_MARKER}
 
-This project uses Luuna Beacon (\`lb\`) for git-native prompt management.
+This project uses Luuna Beacon (\`lbc\`) for git-native prompt management.
 
 **At the start of every session**, run:
 \`\`\`
-lb prime
+lbc prime
 \`\`\`
 
 This injects prompt workflow context: commands, conventions, and common workflows.
 
 **Quick reference:**
-- \`lb list\` — List all prompts
-- \`lb render <name>\` — View rendered prompt (resolves inheritance)
-- \`lb emit --all\` — Render prompts to files
-- \`lb update <name>\` — Update a prompt (creates new version)
-- \`lb sync\` — Stage and commit .luuna/beacon/ changes
+- \`lbc list\` — List all prompts
+- \`lbc render <name>\` — View rendered prompt (resolves inheritance)
+- \`lbc emit --all\` — Render prompts to files
+- \`lbc update <name>\` — Update a prompt (creates new version)
+- \`lbc sync\` — Stage and commit .luuna/beacon/ changes
 
-**Do not manually edit emitted files.** Use \`lb update\` to modify prompts, then \`lb emit\` to regenerate.
+**Do not manually edit emitted files.** Use \`lbc update\` to modify prompts, then \`lbc emit\` to regenerate.
 
-**Atlas metadata:** Prompts can declare expertise dependencies via \`atlas.prime.domains\`, \`atlas.prime.files\`, \`atlas.budget\`, \`atlas.on_empty\`, plus a top-level \`extends_atlas\` flag (override-by-default; merge with parent when \`true\`). Luuna Beacon never shells out to \`luuna-atlas\` — \`lb render --json\` surfaces the resolved declaration in a top-level \`atlas\` field for consumers to act on. See SPEC.md "Atlas Metadata".`;
+**Atlas metadata:** Prompts can declare expertise dependencies via \`atlas.prime.domains\`, \`atlas.prime.files\`, \`atlas.budget\`, \`atlas.on_empty\`, plus a top-level \`extends_atlas\` flag (override-by-default; merge with parent when \`true\`). Luuna Beacon never shells out to \`luuna-atlas\` — \`lbc render --json\` surfaces the resolved declaration in a top-level \`atlas\` field for consumers to act on. See SPEC.md "Atlas Metadata".`;
 }
 
 function findTargetFile(projectRoot: string): string | null {
@@ -45,7 +45,7 @@ export default async function onboard(args: string[], json: boolean): Promise<vo
 	if (args.includes("--help") || args.includes("-h")) {
 		humanOut(`Usage: luuna-beacon onboard [options]
 
-Adds a lb section to CLAUDE.md (or creates it) so AI agents discover prompt workflows.
+Adds a Luuna Beacon section to CLAUDE.md (or creates it) so AI agents discover prompt workflows.
 
 Options:
   --check     Report status without writing (missing, current, outdated)
@@ -100,7 +100,7 @@ Options:
 		if (json) {
 			jsonOut({ success: true, command: "onboard", action: "created", file: filePath });
 		} else {
-			humanOut(`Created ${filePath} with lb section`);
+			humanOut(`Created ${filePath} with Luuna Beacon section`);
 		}
 		return;
 	}
@@ -124,7 +124,7 @@ Options:
 			if (json) {
 				jsonOut({ success: true, command: "onboard", action: "updated", file: filePath });
 			} else {
-				humanOut(`Updated lb section in ${filePath}`);
+				humanOut(`Updated Luuna Beacon section in ${filePath}`);
 			}
 		}
 		return;
@@ -136,14 +136,14 @@ Options:
 	if (json) {
 		jsonOut({ success: true, command: "onboard", action: "appended", file: filePath });
 	} else {
-		humanOut(`Added lb section to ${filePath}`);
+		humanOut(`Added Luuna Beacon section to ${filePath}`);
 	}
 }
 
 export function registerOnboardCommand(program: Command): void {
 	program
 		.command("onboard")
-		.description("Add lb section to CLAUDE.md for AI agent discovery")
+		.description("Add Luuna Beacon section to CLAUDE.md for AI agent discovery")
 		.option("--check", "Report status without writing (missing, current, outdated)")
 		.option("--stdout", "Print snippet to stdout without writing to file")
 		.action(async (opts: Record<string, unknown>) => {

@@ -58,7 +58,7 @@ describe("luuna-beacon onboard", () => {
 			expect(content).toContain("<!-- luuna-beacon:start -->");
 			expect(content).toContain("<!-- luuna-beacon:end -->");
 			expect(content).toContain("Prompt Management (Luuna Beacon)");
-			expect(content).toContain("lb prime");
+			expect(content).toContain("lbc prime");
 		} finally {
 			process.chdir(origCwd);
 		}

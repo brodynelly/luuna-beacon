@@ -24,7 +24,7 @@ Total commands: **24**.
 | [`import`](#import) | Import an existing .md file as a prompt |
 | [`init`](#init) | Initialize .luuna/beacon/ in current directory |
 | [`list`](#list) | List prompts |
-| [`onboard`](#onboard) | Add lb section to CLAUDE.md for AI agent discovery |
+| [`onboard`](#onboard) | Add Luuna Beacon section to CLAUDE.md for AI agent discovery |
 | [`pin`](#pin) | Pin prompt to a specific version |
 | [`prime`](#prime) | Output workflow context for AI agents |
 | [`render`](#render) | Render full prompt (resolve inheritance) |
@@ -223,7 +223,7 @@ luuna-beacon list [options]
 
 ## onboard
 
-Add lb section to CLAUDE.md for AI agent discovery
+Add Luuna Beacon section to CLAUDE.md for AI agent discovery
 
 ```bash
 luuna-beacon onboard [options]
