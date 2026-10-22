@@ -1,5 +1,5 @@
-// JSON Schema for `.luuna/beacon/config.yaml`. Wire-format contract for warren V2's
-// schema-driven config UI (warren ROADMAP R-10): warren reads this schema,
+// JSON Schema for `.luuna/beacon/config.yaml`. Wire-format contract for
+// schema-driven config UIs: a client reads this schema,
 // renders a form, and writes back via `luuna-beacon config set <path> <value>`. Locked
 // with a golden test (config-schema.test.ts) so any shape change is intentional.
 //
@@ -7,7 +7,7 @@
 // `project`, `version`, and a `targets` map of named EmitTargets. The loader
 // transparently migrates legacy `emitDir`/`emitDirByTag` configs to this shape
 // on read; the first `luuna-beacon config set` rewrites the file in the canonical form.
-// Legacy fields are intentionally absent so warren's UI does not surface
+// Legacy fields are intentionally absent so config UIs do not surface
 // deprecated knobs.
 
 type JSONSchema = Record<string, unknown>;
@@ -18,7 +18,7 @@ export function configSchema(): JSONSchema {
 		$id: "https://github.com/brodynelly/luuna-beacon/config.schema.json",
 		title: "Luuna Beacon project config",
 		description:
-			"Schema for .luuna/beacon/config.yaml. Consumed by warren's schema-driven UI; emit via `luuna-beacon config schema`.",
+			"Schema for .luuna/beacon/config.yaml. Consumed by schema-driven config UIs; emit via `luuna-beacon config schema`.",
 		type: "object",
 		required: ["project", "version"],
 		additionalProperties: false,
@@ -27,7 +27,7 @@ export function configSchema(): JSONSchema {
 				type: "string",
 				minLength: 1,
 				title: "Project name",
-				description: "Human-readable project identifier surfaced in `luuna-beacon list` and warren.",
+				description: "Human-readable project identifier surfaced in `luuna-beacon list` and consuming tools.",
 			},
 			version: {
 				type: "string",

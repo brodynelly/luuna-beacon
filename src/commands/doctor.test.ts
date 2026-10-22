@@ -177,7 +177,7 @@ describe("luuna-beacon doctor", () => {
 				name: "with-bad-atlas",
 				version: 1,
 				sections: [],
-				atlas: { on_empty: "explode", prime: { domains: "warren" } },
+				atlas: { on_empty: "explode", prime: { domains: "backend" } },
 				status: "active",
 				createdAt: "2024-01-01",
 				updatedAt: "2024-01-01",
@@ -205,7 +205,7 @@ describe("luuna-beacon doctor", () => {
 				sections: [],
 				extends_atlas: true,
 				atlas: {
-					prime: { domains: ["warren"], files: ["src/**"] },
+					prime: { domains: ["backend"], files: ["src/**"] },
 					budget: 5000,
 					on_empty: "skip",
 				},

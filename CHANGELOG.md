@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - JSONL writes create their temp file beside the target on Windows instead of in the current directory.
 
 ### Changed
+- Removed references to unrelated upstream ecosystem tools from comments, help text, schema descriptions, docs, test fixtures, and debt-marker tracker prefixes (wording only; no behaviour or CLI/JSON contract change).
 - The test suite passes on Windows, and CI runs `bun run verify` on `windows-latest`.
 
 ## [0.2.6] - 2026-06-07

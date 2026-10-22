@@ -41,5 +41,5 @@ flowchart LR
 %%    `.luuna/beacon/schemas.jsonl`.
 %% 6. `emit.ts` writes the rendered prompt to the configured target
 %%    directory (`.md` by default, `.ts` if `emitAs` ends in `.ts`).
-%% 7. Downstream tools (overstory, warren, sapling) consume the emitted
+%% 7. Downstream tools (the Luuna runtime, desktop and terminal client, or other orchestrators) consume the emitted
 %%    files; luuna-beacon itself never reads them back.

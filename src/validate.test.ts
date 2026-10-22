@@ -202,7 +202,7 @@ describe("validateAtlas", () => {
 		const prompt = p({
 			extends_atlas: true,
 			atlas: {
-				prime: { domains: ["warren"], files: ["src/**"] },
+				prime: { domains: ["backend"], files: ["src/**"] },
 				budget: 50000,
 				on_empty: "skip",
 			},
@@ -244,7 +244,7 @@ describe("validateAtlas", () => {
 
 	it("rejects non-array domains", () => {
 		const prompt = p({
-			atlas: { prime: { domains: "warren" } } as unknown as Prompt["atlas"],
+			atlas: { prime: { domains: "backend" } } as unknown as Prompt["atlas"],
 		});
 		const errs = validateAtlas(prompt);
 		expect(errs).toHaveLength(1);

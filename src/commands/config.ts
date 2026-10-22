@@ -1,7 +1,7 @@
 // `luuna-beacon config` — schema-driven read/write surface for `.luuna/beacon/config.yaml`.
 //
-// Designed as warren V2's wire contract (warren ROADMAP R-10):
-//   - `luuna-beacon config schema --json` emits the JSON Schema (warren auto-renders a form)
+// Designed as a wire contract for schema-driven config UIs:
+//   - `luuna-beacon config schema --json` emits the JSON Schema (a UI can auto-render a form)
 //   - `luuna-beacon config show [--path <p>]` reads the current value
 //   - `luuna-beacon config set <path> <value>` validates + writes atomically (YAML-parsed)
 //   - `luuna-beacon config unset <path>` removes a value
@@ -158,7 +158,7 @@ let compiledConfigValidator: ValidateFunction | undefined;
 function getConfigValidator(): ValidateFunction {
 	if (compiledConfigValidator) return compiledConfigValidator;
 	// Strip the meta-schema URI: configSchema() advertises draft 2020-12 for
-	// downstream consumers (warren's UI), but AJV runs default draft-07 mode and
+	// downstream consumers (config UIs), but AJV runs default draft-07 mode and
 	// rejects unknown $schema URIs under strict mode.
 	const { $schema: _meta, ...schema } = configSchema();
 	const ajv = new Ajv({ allErrors: true, strict: false });
