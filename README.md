@@ -1,16 +1,17 @@
 # Luuna Beacon
 
-Prompt composition and versioned agent instructions. The Luuna package identity is **@luuna/beacon-cli**. It is maintained in the independent public repository [brodynelly/luuna-beacon](https://github.com/brodynelly/luuna-beacon). The npm package remains private and unpublished.
+Prompt composition and versioned agent instructions. It is maintained in the independent public repository [brodynelly/luuna-beacon](https://github.com/brodynelly/luuna-beacon).
 
-Run from this directory with Bun 1.4.3:
+Run from this directory with Go 1.27.0:
 
 ```bash
-bun install --frozen-lockfile --ignore-scripts
-bun src/index.ts --help
-bun run verify
+go run ./cmd/luuna-beacon --help
+go test ./...
+go vet ./...
+go build ./cmd/luuna-beacon ./cmd/lbc ./cmd/lb
 ```
 
-The standalone executable is `luuna-beacon`; `lbc` is the Luuna suite shortcut and `lb` remains a compatibility alias. `luuna beacon <args>` is the equivalent entry through Luuna's installed launcher. In a checkout, install dependencies with the command above and run `bun src/index.ts <args>`. Registry publication is disabled; use the Luuna CLI installer from the main checkout to make the commands available on PATH.
+The standalone executable is `luuna-beacon`; `lbc` is the Luuna suite shortcut and `lb` remains a compatibility alias. `luuna beacon <args>` is the equivalent entry through Luuna's installed launcher. In a checkout, run `go run ./cmd/luuna-beacon <args>` or build the desired command under `cmd/`. Registry publication is disabled; use the Luuna CLI installer from the main checkout to make the commands available on PATH.
 
 Project data lives in `.luuna/beacon/` (`prompts.jsonl`, `schemas.jsonl`, `artifacts.jsonl`, `config.yaml`). A legacy project directory from earlier layouts is moved there automatically on first use, with a one-line notice on stderr. Luuna consumes a pinned Git submodule and integrates through the CLI/JSON boundary (Atlas also exports a TypeScript library); runtime policy and approvals remain Luuna's responsibility.
 
@@ -38,7 +39,7 @@ Read [UPSTREAM.md](UPSTREAM.md) for attribution and provenance, [AGENTS.md](AGEN
 
 ## Maintenance and releases
 
-The repository owner and release maintainer is `brodynelly`. CI runs the frozen Bun 1.4.3 dependency installation, type checks, instruction checks and full suite on Linux. Registry publishing is disabled and requires no npm token. Luuna pins a reviewed commit, never a floating branch; update its submodule only after CI and the consumer smoke pass. See [MIGRATION.md](MIGRATION.md) for the verified source baseline.
+The repository owner and release maintainer is `brodynelly`. CI runs Go tests, vet, and builds on Linux and Windows. Registry publishing is disabled. Luuna pins a reviewed commit, never a floating branch; update its submodule only after CI and the consumer smoke pass. See [MIGRATION.md](MIGRATION.md) for the verified source baseline.
 
 ## Origin / attribution
 

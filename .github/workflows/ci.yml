@@ -12,14 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-go@v5
         with:
-          node-version: 24.19.0
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.3
-      - run: bun install --frozen-lockfile --ignore-scripts
-      - run: bun run verify
+          go-version: 1.27.0
+      - run: go test ./...
+      - run: go vet ./...
+      - run: go build ./cmd/luuna-beacon ./cmd/lbc ./cmd/lb
       - name: Reject tracked private artifacts
         run: |
           python3 - <<'PY'
@@ -33,11 +31,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-go@v5
         with:
-          node-version: 24.19.0
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.4.3
-      - run: bun install --frozen-lockfile --ignore-scripts
-      - run: bun run verify
+          go-version: 1.27.0
+      - run: go test ./...
+      - run: go vet ./...
+      - run: go build ./cmd/luuna-beacon ./cmd/lbc ./cmd/lb
